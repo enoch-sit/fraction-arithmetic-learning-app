@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Multiply Visual Compare</title>
+  <style>
+    :root {
+      --ink: #203446;
+      --muted: #607387;
+      --line: #d7e0e8;
+      --panel: #ffffff;
+      --panel-alt: #f5f8fb;
+      --accent: #c96b16;
+      --accent-soft: #fff1e3;
+      --shadow: 0 14px 34px rgba(32, 52, 70, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(255, 221, 188, 0.7), transparent 28%),
+        linear-gradient(180deg, #f8fbfd 0%, #eef4f8 100%);
+    }
+
+    main {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .tag {
+      background: var(--accent-soft);
+      color: #8a4c11;
+      border: 1px solid #efc49b;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .section {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+      align-items: start;
+    }
+
+    .notes, .compare {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .notes {
+      padding: 18px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .notes ul {
+      padding-left: 18px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .frame-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      min-height: 820px;
+    }
+
+    .panel {
+      border-left: 1px solid var(--line);
+      background: var(--panel-alt);
+    }
+
+    .panel:first-child {
+      border-left: none;
+    }
+
+    .panel-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .panel-header strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .panel-header span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: 760px;
+      border: 0;
+      background: white;
+    }
+
+    .footnote {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    a { color: #1f5f96; }
+
+    @media (max-width: 1100px) {
+      .section {
+        grid-template-columns: 1fr;
+      }
+
+      .notes {
+        position: static;
+      }
+
+      .frame-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        border-left: none;
+        border-top: 1px solid var(--line);
+      }
+
+      .panel:first-child {
+        border-top: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <h1>Addition and Multiplication Visual Compare</h1>
+      <p>Temporary review page for comparing the incoming standalone HTML against the current app entry pages. Use this together with the markdown audit file in the same folder.</p>
+      <div class="tag-row">
+        <div class="tag">layout</div>
+        <div class="tag">teaching flow</div>
+        <div class="tag">animation</div>
+        <div class="tag">tooltip and tour overlap</div>
+        <div class="tag">CSS overlap</div>
+      </div>
+      <p class="footnote">If the current app entry pages do not render in this file-based view, open them through your local Vite preview and keep this page as the comparison checklist.</p>
+    </section>
+
+    <section class="section">
+      <aside class="notes">
+        <h2>Addition</h2>
+        <ul>
+          <li>Check whether the current header already captures the same control hierarchy.</li>
+          <li>Compare instruction banner behavior without adding a second guidance layer.</li>
+          <li>Keep guide target selectors stable: frac groups, animation zone, controls pill, answer zone.</li>
+          <li>Treat the tutorial hand as inspiration only, not as direct implementation.</li>
+        </ul>
+      </aside>
+      <div class="compare">
+        <div class="frame-grid">
+          <section class="panel">
+            <div class="panel-header">
+              <strong>Current app entry</strong>
+              <span>../../addition.html</span>
+            </div>
+            <iframe src="../../addition.html" title="Current Addition"></iframe>
+          </section>
+          <section class="panel">
+            <div class="panel-header">
+              <strong>Incoming standalone HTML</strong>
+              <span>../Re_ Protecting our code/FractionApp44(Addition).html</span>
+            </div>
+            <iframe src="../Re_ Protecting our code/FractionApp44(Addition).html" title="Incoming Addition"></iframe>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <aside class="notes">
+        <h2>Multiplication</h2>
+        <ul>
+          <li>Compare the main bar presentation, not just the inline animation script details.</li>
+          <li>Reject direct adoption of the standalone finger tutorial overlay.</li>
+          <li>Keep the current startup tooltip and guided tour entry points intact.</li>
+          <li>Use local CSS polish first before considering any structural changes.</li>
+        </ul>
+      </aside>
+      <div class="compare">
+        <div class="frame-grid">
+          <section class="panel">
+            <div class="panel-header">
+              <strong>Current app entry</strong>
+              <span>../../multiplication.html</span>
+            </div>
+            <iframe src="../../multiplication.html" title="Current Multiplication"></iframe>
+          </section>
+          <section class="panel">
+            <div class="panel-header">
+              <strong>Incoming standalone HTML</strong>
+              <span>../Re_ Protecting our code/FractionApp45(Multiplication).html</span>
+            </div>
+            <iframe src="../Re_ Protecting our code/FractionApp45(Multiplication).html" title="Incoming Multiplication"></iframe>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
