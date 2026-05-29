@@ -1,0 +1,450 @@
+@import '../../shared/base.css';
+
+.comparison-app-shell {
+  max-width: 900px;
+}
+
+.comparison-toolbar-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.comparison-toolbar-panel,
+.comparison-summary-panel {
+  margin-bottom: 18px;
+  border: 1px solid rgba(52, 152, 219, 0.16);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 12px 24px rgba(30, 77, 117, 0.07);
+  padding: 16px 18px;
+}
+
+.comparison-toolbar-panel {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.comparison-control-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.comparison-control-group.quick-actions .lang-btn {
+  color: #34495e;
+  border-color: #34495e;
+  box-shadow: 0 3px 0 #34495e;
+}
+
+.comparison-select-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: var(--dark);
+}
+
+.comparison-select-label select,
+.fraction-format-select {
+  border: 2px solid rgba(52, 152, 219, 0.22);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--dark);
+  font-weight: 700;
+  padding: 8px 12px;
+}
+
+.comparison-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: var(--dark);
+}
+
+.comparison-checkbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+
+.comparison-mode-copy {
+  color: #557189;
+  font-weight: 700;
+}
+
+.comparison-input-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.fraction-input-card {
+  border: 3px solid var(--primary);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(244, 251, 255, 0.94));
+  box-shadow: 0 16px 30px rgba(41, 92, 132, 0.08);
+  padding: 16px;
+}
+
+.fraction-card-topline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.fraction-card-tag {
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 6px 10px;
+}
+
+.fraction-card-preview {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 76px;
+  margin-bottom: 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.fraction-card-fields {
+  display: grid;
+  gap: 10px;
+}
+
+.fraction-card-fields.single-field {
+  grid-template-columns: 1fr;
+}
+
+.fraction-card-fields.fraction-only {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.fraction-card-fields.mixed-fields {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.comparison-stepper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.comparison-stepper-label {
+  color: #557189;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.comparison-stepper-frame {
+  display: flex;
+  border: 2px solid rgba(52, 152, 219, 0.2);
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+  min-height: 52px;
+}
+
+.comparison-stepper-frame input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--dark);
+  font-size: 1.3rem;
+  font-weight: 800;
+  outline: none;
+  text-align: center;
+  padding: 0 8px;
+  -moz-appearance: textfield;
+}
+
+.comparison-stepper-frame input::-webkit-inner-spin-button,
+.comparison-stepper-frame input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.comparison-stepper-buttons {
+  display: flex;
+  flex-direction: column;
+  width: 28px;
+  border-left: 2px solid rgba(52, 152, 219, 0.16);
+}
+
+.comparison-stepper-buttons button {
+  flex: 1;
+  border: 0;
+  background: #f4fbff;
+  color: var(--blue);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.comparison-stepper-buttons button:first-child {
+  border-bottom: 2px solid rgba(52, 152, 219, 0.14);
+}
+
+.comparison-stepper.compact .comparison-stepper-frame {
+  min-height: 48px;
+}
+
+.comparison-summary-title {
+  color: #557189;
+  font-size: 0.9rem;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.comparison-summary-copy {
+  color: var(--dark);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.comparison-warning {
+  color: var(--red);
+  font-weight: 800;
+  margin-top: 10px;
+}
+
+.comparison-visual-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-height: 480px;
+  padding-bottom: 18px;
+}
+
+.comparison-row {
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 16px 28px rgba(39, 79, 110, 0.08);
+  padding: 18px;
+  transition: transform 0.12s ease;
+}
+
+.comparison-row.dragging {
+  box-shadow: 0 20px 36px rgba(39, 79, 110, 0.16);
+}
+
+.comparison-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.comparison-row-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.comparison-row-title {
+  min-width: 58px;
+}
+
+.comparison-row-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+}
+
+.comparison-offset-handle {
+  border: 2px solid rgba(52, 152, 219, 0.28);
+  border-radius: 999px;
+  background: #fffdf7;
+  color: #557189;
+  cursor: grab;
+  font-size: 0.86rem;
+  font-weight: 800;
+  padding: 8px 12px;
+}
+
+.comparison-track-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.comparison-track {
+  width: 100%;
+}
+
+.comparison-bar {
+  position: relative;
+  height: 64px;
+  border: 3px solid var(--primary);
+  border-radius: 16px;
+  background: #eef4f7;
+  overflow: hidden;
+  transition: width 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.comparison-bar.interactive {
+  cursor: ew-resize;
+}
+
+.comparison-bar.mismatch {
+  box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.08);
+}
+
+.comparison-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  opacity: 0.72;
+}
+
+.comparison-grid-overlay {
+  position: absolute;
+  inset: 0;
+}
+
+.comparison-segment-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.comparison-segment-divider.major {
+  width: 3px;
+  background: var(--grid-dark);
+}
+
+.comparison-number-line-wrap {
+  transition: width 0.18s ease;
+}
+
+.comparison-line-shell {
+  position: relative;
+  height: 56px;
+}
+
+.comparison-line-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 7px;
+  height: 2px;
+  background: #0c2238;
+}
+
+.comparison-line-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.comparison-line-mark {
+  width: 2px;
+  height: 12px;
+  background: #0c2238;
+}
+
+.comparison-line-mark.major {
+  width: 3px;
+  height: 18px;
+}
+
+.comparison-line-label {
+  margin-top: 4px;
+  color: #0c2238;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.comparison-line-frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.05;
+}
+
+.comparison-line-frac span:first-child {
+  padding: 0 3px;
+}
+
+.comparison-line-frac span:last-child {
+  border-top: 1.5px solid currentColor;
+  padding: 1px 3px 0;
+}
+
+.comparison-line-mixed {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.comparison-frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.05;
+}
+
+.comparison-frac-num {
+  padding: 0 4px 2px;
+}
+
+.comparison-frac-den {
+  border-top: 2px solid currentColor;
+  padding: 2px 4px 0;
+}
+
+.comparison-mixed {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.comparison-integer {
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+@media (max-width: 720px) {
+  .comparison-toolbar-inline,
+  .comparison-toolbar-panel,
+  .comparison-row-header,
+  .fraction-card-topline {
+    align-items: flex-start;
+  }
+
+  .comparison-toolbar-panel,
+  .comparison-row-header,
+  .fraction-card-topline {
+    flex-direction: column;
+  }
+
+  .fraction-card-fields.mixed-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-bar {
+    height: 56px;
+  }
+}

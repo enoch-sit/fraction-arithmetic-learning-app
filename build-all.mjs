@@ -6,7 +6,7 @@ import { rmSync, mkdirSync } from 'fs'
 try { rmSync('dist', { recursive: true }) } catch {}
 mkdirSync('dist', { recursive: true })
 
-const pages = ['index', 'expanding', 'addition', 'subtraction', 'multiplication', 'division']
+const pages = ['index', 'expanding', 'addition', 'subtraction', 'multiplication', 'division', 'comparison']
 
 for (const page of pages) {
   console.log(`\n--- Building ${page} ---`)

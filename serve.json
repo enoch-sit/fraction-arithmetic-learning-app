@@ -20,6 +20,10 @@
     {
       "source": "/expanding",
       "destination": "/expanding.html"
+    },
+    {
+      "source": "/comparison",
+      "destination": "/comparison.html"
     }
   ]
 }

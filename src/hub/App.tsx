@@ -5,6 +5,7 @@ export default function App() {
     { href: 'subtraction.html', emoji: '➖', title: '異分母分數減法', desc: '通分後進行分數減法，含拖拉丟棄動畫', color: '#e74c3c' },
     { href: 'multiplication.html', emoji: '✖️', title: '分數乘法', desc: '以長條圖視覺化分數乘法的細分與保留過程', color: '#e67e22' },
     { href: 'division.html', emoji: '➗', title: '異分母分數除法', desc: '通分後以模具量測法演示分數除法', color: '#3498db' },
+    { href: 'comparison.html', emoji: '⚖️', title: '分數比較', desc: '以長條圖與數線比較 2 到 3 個分數的大小關係', color: '#16a085' },
   ]
 
   return (
