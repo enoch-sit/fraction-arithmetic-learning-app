@@ -1,0 +1,49 @@
+Based on the structure of the `enoch-sit/fraction-arithmetic-learning-app` repository (visible in your workspace, which features a React + TypeScript + Vite architecture alongside other learning pages like `addition.html`, `subtraction.html`, etc.), here is a comprehensive integration map.
+
+Since the project uses a hybrid architecture (Vite compiling specialized HTML files or standard React components inside `src/`), this plan treats the new **Fraction Comparison (分數比較)** application as either a new TypeScript-backed module or a modular view component.
+
+---
+
+### Integration & Reusability Map
+
+| Component / File Context | Status | Reuse / Update / Add Action Details |
+| --- | --- | --- |
+| **`src/components/FractionInput`** <br>
+
+<br>*(Or equivalent existing input component)* | **Update & Reuse** | **Reuse:** The internal inputs, styling, and basic state structure for numerators, denominators, and whole numbers.<br>
+
+<br>**Update:** Inject the custom context menu (`contextmenu` / long-press text format selectors) directly into the wrapper configuration or via a React portal/prop flag. Ensure boundaries are clamped precisely between `1` and `99`. |
+| **`src/components/FractionBarVisualizer`** <br>
+
+<br>*(Or equivalent visual chart component)* | **Update & Reuse** | **Reuse:** The grid partitioning layout logic (`grid-overlay`, dynamic thin/thick grid line rendering based on common denominators).<br>
+
+<br>**Update:** <br>
+
+<br>1. Accept an active fractional count parameter ($2$ or $3$).<br>
+
+<br>2. Add **Mode 2** state tracking features (individual `containerWidths` percentages and vertical transform offsets `vOffsets`).<br>
+
+<br>3. Alter fill colors to a muted gray (`#95a5a6`) dynamically if widths deviate. |
+| **`src/components/NumberLine`** <br>
+
+<br>*(Or equivalent if already present in `src/`)* | **Update & Reuse** | **Reuse:** SVG/CSS ticks generation structure.<br>
+
+<br>**Update:** Synchronize its width element bindings wrapper exactly to the corresponding dynamic `containerWidth` percentage instead of defaulting to a static layout container. |
+| **`src/components/ComparisonEngine`** <br>
+
+<br>*(New logic container)* | **Add** | **Add:** Create a new orchestrator component (`ComparisonEngine.tsx`). This will handle state matrices for up to 3 fractions, sync-vs-desync toggles (Mode 1 / Mode 2), snap-to-target width metrics (with the $3\%$ threshold snap logic), and error messaging when lengths break alignment bounds. |
+| **`comparison.html`** <br>
+
+<br>*(Root level page template)* | **Add** | **Add:** Create a clean entry page mirroring `addition.html` and `multiplication.html` to register this game view seamlessly inside the existing monolithic build ecosystem. |
+| **`src/styles/comparison.css`** <br>
+
+<br>*(Or global theme variables)* | **Reuse** | **Reuse:** Core layout root colors (`--primary`, `--accent`, `--success`), responsiveness media queries, and container styling configurations. |
+
+---
+
+### Step-by-Step Refactoring Advice
+
+1. **State Migration to React:** Convert the raw JavaScript object arrays (`state`, `containerWidths`, `vOffsets`) into proper React hooks (`useState` or a structured `useReducer`) within your new component to prevent manual element updates via `document.getElementById`.
+2. **Handling Pointer Events:** The custom interaction system (combining touch thresholds, pointer gestures, vertical vs horizontal drag mode selection, and variable snap behaviors) can be neatly wrapped into a custom React hook (e.g., `useFractionDrag`). This keeps the layout components completely separated from the complex math equations and positioning logic.
+
+Would you like me to generate the full TypeScript React component setup for the dragging calculations (`useFractionDrag`) or the combined `ComparisonEngine` wrapper next?
