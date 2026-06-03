@@ -33,6 +33,6 @@ export interface StartupTooltipContent {
 
 export interface PageGuideContent {
   startupHiddenMessages?: string[]
-  startupTooltip: StartupTooltipContent
+  startupTooltip?: StartupTooltipContent
   tourSteps: GuideStepContent[]
 }

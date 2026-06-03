@@ -2,11 +2,11 @@
 import { execSync } from 'child_process'
 import { rmSync, mkdirSync } from 'fs'
 
-// Clean dist/
-try { rmSync('dist', { recursive: true }) } catch {}
-mkdirSync('dist', { recursive: true })
+// Clean docs/
+try { rmSync('docs', { recursive: true }) } catch {}
+mkdirSync('docs', { recursive: true })
 
-const pages = ['index', 'expanding', 'addition', 'subtraction', 'multiplication', 'division', 'comparison']
+const pages = ['index', 'expanding', 'addition', 'subtraction', 'multiplication', 'division', 'comparison', 'equivalent', 'intfracconv']
 
 for (const page of pages) {
   console.log(`\n--- Building ${page} ---`)

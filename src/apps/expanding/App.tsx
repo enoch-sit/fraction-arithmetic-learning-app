@@ -43,14 +43,16 @@ export default function App() {
   useEffect(() => {
     const { startupTooltip } = expandingGuideContent
 
-    return showLightGuideHint({
-      id: startupTooltip.id,
-      element: startupTooltip.element,
-      title: startupTooltip.title,
-      description: startupTooltip.description,
-      side: startupTooltip.side,
-      delayMs: startupTooltip.delayMs,
-    })
+    if (startupTooltip) {
+      return showLightGuideHint({
+        id: startupTooltip.id,
+        element: startupTooltip.element,
+        title: startupTooltip.title,
+        description: startupTooltip.description,
+        side: startupTooltip.side,
+        delayMs: startupTooltip.delayMs,
+      })
+    }
   }, [])
 
   useEffect(() => {

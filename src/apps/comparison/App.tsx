@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './app.css'
 import AppHeader from '../../shared/components/AppHeader'
+import FracInputStepper from '../../shared/components/FracInputStepper'
 import LangBtn from '../../shared/components/LangBtn'
 
 type FractionFormat = 'integer' | 'fraction' | 'mixed'
@@ -21,13 +22,6 @@ interface DragState {
   initialOffset: number
   boundsLeft: number
   boundsWidth: number
-}
-
-interface NumberStepperProps {
-  label: string
-  value: number
-  onChange: (nextValue: number) => void
-  compact?: boolean
 }
 
 interface FractionInputCardProps {
@@ -143,34 +137,6 @@ function FractionDisplay({ entry }: { entry: FractionEntry }) {
   )
 }
 
-function NumberStepper({ label, value, onChange, compact }: NumberStepperProps) {
-  const className = compact ? 'comparison-stepper compact' : 'comparison-stepper'
-
-  return (
-    <label className={className}>
-      <span className="comparison-stepper-label">{label}</span>
-      <div className="comparison-stepper-frame">
-        <input
-          type="number"
-          min={1}
-          max={99}
-          value={value}
-          inputMode="numeric"
-          onChange={(event) => onChange(clampInputValue(Number(event.target.value)))}
-        />
-        <div className="comparison-stepper-buttons">
-          <button type="button" onClick={() => onChange(clampInputValue(value + 1))} aria-label={`${label} increase`}>
-            ▲
-          </button>
-          <button type="button" onClick={() => onChange(clampInputValue(value - 1))} aria-label={`${label} decrease`}>
-            ▼
-          </button>
-        </div>
-      </div>
-    </label>
-  )
-}
-
 function FractionInputCard({ entry, color, onFormatChange, onFieldChange }: FractionInputCardProps) {
   return (
     <section className="fraction-input-card" style={{ borderColor: color }}>
@@ -188,30 +154,72 @@ function FractionInputCard({ entry, color, onFormatChange, onFieldChange }: Frac
         </select>
       </div>
 
-      <div className="fraction-card-preview" style={{ color }}>
-        <FractionDisplay entry={entry} />
+      <div className="fraction-card-display" style={{ color }}>
+        {entry.format === 'integer' ? (
+          <FracInputStepper
+            id={`w-${entry.label}`}
+            value={entry.w}
+            onChange={(nextValue) => onFieldChange('w', nextValue)}
+            min={1}
+            max={99}
+            onUpdate={() => {}}
+          />
+        ) : null}
+
+        {entry.format === 'fraction' ? (
+          <div className="frac">
+            <FracInputStepper
+              id={`n-${entry.label}`}
+              value={entry.n}
+              onChange={(nextValue) => onFieldChange('n', nextValue)}
+              min={1}
+              max={99}
+              onUpdate={() => {}}
+            />
+            <div className="fraction-line" />
+            <FracInputStepper
+              id={`d-${entry.label}`}
+              value={entry.d}
+              onChange={(nextValue) => onFieldChange('d', nextValue)}
+              min={1}
+              max={99}
+              onUpdate={() => {}}
+            />
+          </div>
+        ) : null}
+
+        {entry.format === 'mixed' ? (
+          <div className="mixed-frac">
+            <FracInputStepper
+              id={`w-${entry.label}`}
+              value={entry.w}
+              onChange={(nextValue) => onFieldChange('w', nextValue)}
+              min={0}
+              max={99}
+              onUpdate={() => {}}
+            />
+            <div className="frac">
+              <FracInputStepper
+                id={`n-${entry.label}`}
+                value={entry.n}
+                onChange={(nextValue) => onFieldChange('n', nextValue)}
+                min={1}
+                max={99}
+                onUpdate={() => {}}
+              />
+              <div className="fraction-line" />
+              <FracInputStepper
+                id={`d-${entry.label}`}
+                value={entry.d}
+                onChange={(nextValue) => onFieldChange('d', nextValue)}
+                min={1}
+                max={99}
+                onUpdate={() => {}}
+              />
+            </div>
+          </div>
+        ) : null}
       </div>
-
-      {entry.format === 'integer' ? (
-        <div className="fraction-card-fields single-field">
-          <NumberStepper label="整數" value={entry.w} onChange={(nextValue) => onFieldChange('w', nextValue)} compact />
-        </div>
-      ) : null}
-
-      {entry.format === 'fraction' ? (
-        <div className="fraction-card-fields fraction-only">
-          <NumberStepper label="分子" value={entry.n} onChange={(nextValue) => onFieldChange('n', nextValue)} compact />
-          <NumberStepper label="分母" value={entry.d} onChange={(nextValue) => onFieldChange('d', nextValue)} compact />
-        </div>
-      ) : null}
-
-      {entry.format === 'mixed' ? (
-        <div className="fraction-card-fields mixed-fields">
-          <NumberStepper label="整數" value={entry.w} onChange={(nextValue) => onFieldChange('w', nextValue)} compact />
-          <NumberStepper label="分子" value={entry.n} onChange={(nextValue) => onFieldChange('n', nextValue)} compact />
-          <NumberStepper label="分母" value={entry.d} onChange={(nextValue) => onFieldChange('d', nextValue)} compact />
-        </div>
-      ) : null}
     </section>
   )
 }

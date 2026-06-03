@@ -9,6 +9,7 @@ const page = process.env.VITE_PAGE || 'index'
 export default defineConfig({
   plugins: [react(), viteSingleFile()],
   build: {
+    outDir: 'docs',
     emptyOutDir: false, // handled by build-all.mjs
     rollupOptions: {
       input: `${page}.html`,

@@ -1,14 +1,6 @@
 import type { PageGuideContent } from './shared'
 
 export const expandingGuideContent: PageGuideContent = {
-  startupTooltip: {
-    id: 'expanding-start',
-    element: '.fraction-box',
-    title: '先看這裡',
-    description: '先點一下原始分數。左邊長條保留原來的分數，右邊長條顯示擴分或約分後的結果，方便直接比較。',
-    side: 'bottom',
-    delayMs: 450,
-  },
   tourSteps: [
     {
       id: 'mode-toggle',

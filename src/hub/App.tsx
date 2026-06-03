@@ -1,6 +1,8 @@
 export default function App() {
   const apps = [
     { href: 'expanding.html', emoji: '🔢', title: '分數擴分與約分', desc: '以視覺化長條圖學習分數的擴分與約分操作', color: '#9b59b6' },
+    { href: 'equivalent.html', emoji: '🟰', title: '相等分數 (約分/擴分)', desc: '探索相等分數的概念，使用乘法擴分與除法約分改變分母', color: '#8e44ad' },
+    { href: 'intfracconv.html', emoji: '↔️', title: '整數與分數互換', desc: '探索整數、真分數、假分數與帶分數之間的轉換關係', color: '#9b59b6' },
     { href: 'addition.html', emoji: '➕', title: '異分母分數加法', desc: '通分後進行分數加法，含拖拉色塊合併動畫', color: '#27ae60' },
     { href: 'subtraction.html', emoji: '➖', title: '異分母分數減法', desc: '通分後進行分數減法，含拖拉丟棄動畫', color: '#e74c3c' },
     { href: 'multiplication.html', emoji: '✖️', title: '分數乘法', desc: '以長條圖視覺化分數乘法的細分與保留過程', color: '#e67e22' },

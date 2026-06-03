@@ -110,31 +110,13 @@
   padding: 6px 10px;
 }
 
-.fraction-card-preview {
+.fraction-card-display {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 76px;
-  margin-bottom: 12px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.82);
-}
-
-.fraction-card-fields {
-  display: grid;
-  gap: 10px;
-}
-
-.fraction-card-fields.single-field {
-  grid-template-columns: 1fr;
-}
-
-.fraction-card-fields.fraction-only {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.fraction-card-fields.mixed-fields {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 10px 0;
+  font-size: 1.8rem;
 }
 
 .comparison-stepper {
