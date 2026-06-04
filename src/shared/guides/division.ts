@@ -43,7 +43,7 @@ export const divisionGuideContent: PageGuideContent = {
     {
       id: 'answer-zone',
       element: '#bottom-answer-zone',
-      side: 'top',
+      side: 'bottom',
       title: '✏️ 填寫答案',
       description: '在這裡輸入除法的商。<br>記得化簡到最簡分數！',
     },

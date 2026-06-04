@@ -65,6 +65,32 @@ export default function App() {
     }
 
     function toggleNumberLine() {
+      const showNL = (document.getElementById('show-nl-cb') as HTMLInputElement).checked
+
+      // Handle all bar displays (bar1, bar2, mismatch-preview)
+      const prefixes = ['bar1', 'bar2', 'mismatch-preview']
+
+      prefixes.forEach((prefix) => {
+        const wrap = document.getElementById(`${prefix}-wrap`)
+        const nlWrap = document.getElementById(`${prefix}-nl`)
+
+        if (wrap) {
+          if (showNL) wrap.classList.add('continuous')
+          else wrap.classList.remove('continuous')
+        }
+
+        if (nlWrap && nlWrap.innerHTML.trim() !== '') {
+          if (showNL) {
+            nlWrap.style.display = 'flex'
+            nlWrap.classList.add('continuous')
+          } else {
+            nlWrap.style.display = 'none'
+            nlWrap.classList.remove('continuous')
+          }
+        }
+      })
+
+      // Re-render bars to regenerate number lines if needed
       if (bar1Visible) renderBar(1, 'none')
       if (bar2Visible) renderBar(2, 'none')
       renderMismatchPreview()
@@ -150,6 +176,7 @@ export default function App() {
       void (row as HTMLElement).offsetWidth
       row.classList.add('fade-in-slow')
       bar1Visible = true
+      updateTrashAreaVisibility()
       checkCommonDenom()
       showNextActionCue()
     }
@@ -163,6 +190,7 @@ export default function App() {
       void (row as HTMLElement).offsetWidth
       row.classList.add('fade-in-slow')
       bar2Visible = true
+      updateTrashAreaVisibility()
       checkCommonDenom()
       showNextActionCue()
     }
@@ -252,8 +280,7 @@ export default function App() {
       if (nlWrap) {
         nlWrap.style.display = showNL ? 'flex' : 'none'
         if (showNL) {
-          if (showNL) nlWrap.classList.add('continuous')
-          else nlWrap.classList.remove('continuous')
+          nlWrap.classList.add('continuous')
           nlWrap.innerHTML = ''
           const maxW2 = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--max-wholes')) || 1
           for (let i = 0; i < maxW2; i++) {
@@ -265,6 +292,8 @@ export default function App() {
             nlUnit.innerHTML = svg
             nlWrap.appendChild(nlUnit)
           }
+        } else {
+          nlWrap.classList.remove('continuous')
         }
       }
     }
@@ -947,17 +976,168 @@ export default function App() {
       window.getSelection()?.removeAllRanges()
     }
 
-    function inflateRect(
-      rect: DOMRect | { left: number; top: number; width: number; height: number },
-      paddingX: number,
-      paddingY: number
-    ) {
-      return {
-        left: rect.left - paddingX,
-        top: rect.top - paddingY,
-        width: rect.width + paddingX * 2,
-        height: rect.height + paddingY * 2,
+    function triggerErrorMerge() {
+      const instrEl = document.getElementById('drag-instruction')
+      if (instrEl) {
+        instrEl.innerHTML = `⚠️ 分母不同，無法直接相減！請先點擊「擴分/約分」尋找公共的分母。`
       }
+      showErrorMergeBar()
+    }
+
+    function showErrorMergeBar() {
+      const errArea = document.getElementById('error-merge-area') as HTMLElement | null
+      if (!errArea) return
+      errArea.style.display = 'flex'
+
+      const wrap = document.getElementById('error-bar-wrap') as HTMLElement | null
+      const nlWrap = document.getElementById('error-nl-wrap') as HTMLElement | null
+      if (!wrap || !nlWrap) return
+
+      const showNL = (document.getElementById('show-nl-cb') as HTMLInputElement).checked
+      const vals = getSafeValues()
+      const maxW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--max-wholes')) || 1
+
+      wrap.innerHTML = ''
+      nlWrap.innerHTML = ''
+
+      const errorLabel = document.getElementById('error-label') as HTMLElement | null
+      if (errorLabel) {
+        errorLabel.innerHTML = `<div style="display:flex; align-items:center; justify-content:center; gap:5px; flex-wrap:wrap; font-size:1.8rem;">${getDisplayHtml(vals.w1, vals.n1, vals.d1, 'var(--red)')}<span style="font-weight:bold; color:var(--dark); font-size:1.8rem;">-</span>${getDisplayHtml(vals.w2, vals.n2, vals.d2, 'var(--blue)')}<span style="font-weight:bold; color:var(--dark); font-size:1.8rem;">?</span></div>`
+      }
+
+      for (let i = 0; i < maxW; i++) {
+        const unit = document.createElement('div')
+        unit.className = 'bar-unit'
+        const pct1 = Math.max(0, Math.min(100, ((vals.total_n1 - (i * vals.d1)) / vals.d1) * 100))
+        const pct2 = Math.max(0, Math.min(100, ((vals.total_n2 - (i * vals.d2)) / vals.d2) * 100))
+
+        let grids = '<div class="grid-overlay">'
+        for (let k = 1; k < vals.d1; k++) {
+          grids += `<div class="abs-thin-line" style="left:${(k / vals.d1) * 100}%; height: 100%; top: 0;"></div>`
+        }
+        for (let k = 1; k < vals.d2; k++) {
+          grids += `<div class="abs-thin-line" style="left:${(k / vals.d2) * 100}%; height: 100%; top: 0;"></div>`
+        }
+        grids += '</div>'
+
+        unit.innerHTML = `<div class="bar-fill" style="width: ${pct1}%; background-color: var(--red); opacity: 0.85; height: 100%; top: 0; position: absolute; left: 0; z-index: 1;"></div><div class="bar-fill" style="width: ${pct2}%; background-color: var(--blue); opacity: 0.85; height: 100%; top: 0; position: absolute; left: 0; z-index: 2;"></div>${grids}`
+        wrap.appendChild(unit)
+
+        const nlUnit = document.createElement('div')
+        nlUnit.className = 'nl-unit'
+        let labelsHtml = (i === 0) ? `<div style="position: absolute; left: 0%; top: 0px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 5;"><div style="width: 2px; height: 6px; background: var(--dark); margin-bottom: 2px;"></div><span style="font-weight:bold; font-size:1.1rem; color:var(--dark);">0</span></div>` : ''
+        labelsHtml += `<div style="position: absolute; left: 100%; top: 0px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 5;"><div style="width: 2px; height: 6px; background: var(--dark); margin-bottom: 2px;"></div><span style="font-weight:bold; font-size:1.1rem; color:var(--dark);">${i + 1}</span></div>`
+
+        const f1 = vals.total_n1 / vals.d1
+        const f2 = vals.total_n2 / vals.d2
+        if (f1 > i && f1 <= i + 1) {
+          labelsHtml += `<div style="position: absolute; left: ${(f1 - i) * 100}%; top: 0px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 6;"><div style="width: 2px; height: 10px; background: var(--red); margin-bottom: 2px;"></div><div style="transform: scale(0.85); transform-origin: top center; background: rgba(255,255,255,0.85); border-radius: 4px; padding: 2px; white-space:nowrap;">${getDisplayHtml(vals.w1, vals.n1, vals.d1, 'var(--red)')}</div></div>`
+        }
+        if (f2 > i && f2 <= i + 1) {
+          labelsHtml += `<div style="position: absolute; left: ${(f2 - i) * 100}%; top: 0px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 6;"><div style="width: 2px; height: 10px; background: var(--blue); margin-bottom: 2px;"></div><div style="transform: scale(0.85); transform-origin: top center; background: rgba(255,255,255,0.85); border-radius: 4px; padding: 2px; white-space:nowrap;">${getDisplayHtml(vals.w2, vals.n2, vals.d2, 'var(--blue)')}</div></div>`
+        }
+        nlUnit.innerHTML = labelsHtml
+        nlWrap.appendChild(nlUnit)
+      }
+
+      if (showNL) {
+        wrap.classList.add('continuous')
+        nlWrap.classList.add('continuous')
+        nlWrap.style.display = 'flex'
+      } else {
+        wrap.classList.remove('continuous')
+        nlWrap.classList.remove('continuous')
+        nlWrap.style.display = 'none'
+      }
+
+      errorMergeShown = true
+    }
+
+    function hideErrorMergeBar() {
+      const errArea = document.getElementById('error-merge-area') as HTMLElement | null
+      if (errArea) errArea.style.display = 'none'
+      errorMergeShown = false
+    }
+
+    // Toggle trash area visibility based on bar visibility (Fix015)
+    function updateTrashAreaVisibility() {
+      const trashArea = document.getElementById('trash-area') as HTMLElement | null
+      if (!trashArea) return
+      
+      // Show trash area only when both bars are displayed
+      if (bar1Visible && bar2Visible) {
+        trashArea.style.display = 'flex'
+      } else {
+        trashArea.style.display = 'none'
+      }
+    }
+
+  // Update trash content to show two bars with equal segments (Fix016)
+  function updateTrashTooltip(cd: number) {
+    const tooltip = document.getElementById('trash-content') as HTMLElement | null
+    if (!tooltip) return
+    
+    // Show empty message if nothing trashed yet
+    if (trashedCount === 0 || !isCommonDenomReady) {
+      tooltip.innerHTML = "<div style='text-align:center; color:#7f8c8d; padding:10px; font-weight:normal;'>目前垃圾桶是空的</div>"
+      return
+    }
+    
+    const w = Math.floor(trashedCount / cd)
+    const n = trashedCount % cd
+    let fracHtml = ''
+    
+    if (w > 0 && n === 0) {
+      fracHtml = `<b>${w}</b> 個整數`
+    } else if (w > 0) {
+      fracHtml = `<b>${w}</b> 個整數 和 <div class="inline-frac"><span>${n}</span><div class="line"></div><span>${cd}</span></div>`
+    } else {
+      fracHtml = `<div class="inline-frac"><span>${n}</span><div class="line"></div><span>${cd}</span></div>`
+    }
+    
+    // Generate mini bar with EQUAL segments (using grid-overlay)
+    const genMini = (count: number, color: string) => {
+      if (cd <= 0) return ''
+      let html = '<div class="bar-wrap-container continuous" style="margin-top: 8px;">'
+      const maxWholes = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--max-wholes')) || 1
+      
+      for (let i = 0; i < maxWholes; i++) {
+        const fillPct = (i < Math.floor(count / cd)) 
+          ? 100 
+          : ((i === Math.floor(count / cd) && (count % cd) > 0) 
+              ? ((count % cd) / cd) * 100 
+              : 0)
+        
+        // Grid overlay with thin lines for EQUAL segments
+        const gridLines = Array.from({length: cd - 1}, (_, k) => 
+          `<div class="abs-thin-line" style="left:${((k + 1) / cd) * 100}%;"></div>`
+        ).join('')
+        
+        html += `<div class="bar-unit" style="background: transparent;">${
+          fillPct > 0 
+            ? `<div class="bar-fill" style="width:${fillPct}%; background-color:${color}; opacity: 0.85;"></div>` 
+            : ''
+        }<div class="grid-overlay">${gridLines}</div></div>`
+      }
+      return html + '</div>'
+    }
+    
+    // Show TWO bars: red (被減數) and blue (減數)
+    tooltip.innerHTML = `
+      <div style="margin-bottom: 15px;">
+        <div style="padding: 0 15px;">
+          <span style="color:var(--red); font-weight:bold;">被減數 (紅) 已丟棄: ${fracHtml}</span>
+        </div>
+        ${genMini(trashedCount, 'var(--red)')}
+      </div>
+      <div>
+        <div style="padding: 0 15px;">
+          <span style="color:var(--blue); font-weight:bold;">減數 (藍) 已對消: ${fracHtml}</span>
+        </div>
+        ${genMini(trashedCount, 'var(--blue)')}
+      </div>
+    `
+  }
     }
 
     function getBarLaneDropRect(block: HTMLElement) {
@@ -1224,14 +1404,24 @@ export default function App() {
       getVisibleBarBlocks(1).forEach((block) => {
         const isActiveCandidate = candidate?.block === block
         block.classList.toggle('removal-source-active', isActiveCandidate)
-        block.onclick = isCommonDenomReady && !isRemovalAnimating && isActiveCandidate
+        block.onclick = !isRemovalAnimating && isActiveCandidate
           ? () => {
             if (block.dataset.suppressClick === 'true') return
-            executeSubtractionStep(cd, { skipHand: true, stableBarAnimation: true })
+            if (isCommonDenomReady) {
+              executeSubtractionStep(cd, { skipHand: true, stableBarAnimation: true })
+            } else {
+              triggerErrorMerge()
+            }
           }
           : null
-        block.onpointerdown = isCommonDenomReady && !isRemovalAnimating && isActiveCandidate
-          ? (event) => startRemovalDrag(event, block, cd, 'red')
+        block.onpointerdown = !isRemovalAnimating && isActiveCandidate
+          ? (event) => {
+            if (isCommonDenomReady) {
+              startRemovalDrag(event, block, cd, 'red')
+            } else {
+              triggerErrorMerge()
+            }
+          }
           : null
       })
 
@@ -1326,6 +1516,7 @@ export default function App() {
       convertBarToDraggable(2, cd, 'var(--blue)')
       updateSubtrahendCountdown(cd, 250)
       updateTrashFeedback(cd)
+      updateTrashTooltip(cd)
       updateLabelsDuringRemoval(cd)
       updateRemovalTargets(cd)
       updatePlaybackControls()
@@ -1396,6 +1587,7 @@ export default function App() {
       trashedCount += candidate.removePieces
       updateSubtrahendCountdown(cd, animDuration)
       updateTrashFeedback(cd)
+      updateTrashTooltip(cd)
       updateLabelsDuringRemoval(cd)
 
       if (getRemainingRemovalPieces() <= 0) {
@@ -1660,6 +1852,7 @@ export default function App() {
         updateSubtrahendCountdown(cd1, 0)
         updateLabelsDuringRemoval(cd1)
         updateTrashFeedback(cd1)
+        updateTrashTooltip(cd1)
         updateRemovalTargets(cd1)
         updatePlaybackControls()
 
@@ -1698,6 +1891,7 @@ export default function App() {
 
     function checkCommonDenom() {
       if (!bar1Visible || !bar2Visible) return
+      hideErrorMergeBar()
       const vals = getSafeValues()
       const cd1 = vals.d1 * s1
       const cd2 = vals.d2 * s2
@@ -1738,6 +1932,7 @@ export default function App() {
     }
 
     function updateUI() {
+      hideErrorMergeBar()
       const valsInput = getSafeValues()
       const val1 = valsInput.total_n1 / valsInput.d1
       const val2 = valsInput.total_n2 / valsInput.d2
@@ -1756,9 +1951,11 @@ export default function App() {
 
       s1 = 1; s2 = 1
       bar1Visible = false; bar2Visible = false
+      updateTrashAreaVisibility()
       isCommonDenomReady = false
       trashedCount = 0
       removalTargetPieces = 0
+      updateTrashTooltip(vals.d1 * s1)
       clearRemovalCue()
 
       document.querySelectorAll('.rearranged-block').forEach((el) => el.remove())
@@ -1768,6 +1965,7 @@ export default function App() {
       const rearrangeBtn = document.getElementById('rearrange-btn')
       if (rearrangeBtn) (rearrangeBtn as HTMLElement).style.display = 'none'
       isRearranged = false
+      hideErrorMergeBar()
 
       const wpEl = document.getElementById('word-problem')!
       if (currentWordProblemTemplate) {
@@ -1816,6 +2014,16 @@ export default function App() {
             <button id="simplify-2" class="tool-btn" onclick="window._sub.applyTool(2, 'simplify')">➖ 約分</button>
           </div>
         </div>
+        <div id="error-merge-area" style="display:none; position:relative; width:100%; min-height:80px; align-items:center; justify-content:space-between; background: #fff3cd; border: 2px solid #ff6b6b; border-radius: 12px; padding: 15px; margin-top: 10px; animation: errorShake 0.5s;">
+          <div id="error-label" style="width:15%; text-align:center; font-weight:bold; color:var(--dark);"></div>
+          <div class="bars-column">
+            <div id="error-bar-wrap" class="bar-wrap-container"></div>
+            <div id="error-nl-wrap" class="nl-wrap-container" style="display:none;"></div>
+          </div>
+          <div style="width:15%; display:flex; justify-content:center;">
+            <button class="tool-btn" style="background: #666;" onclick="window._sub.hideErrorMergeBar()">✕ 關閉</button>
+          </div>
+        </div>
         <div id="mismatch-preview-row" style="display:none; position:relative; width:100%; min-height:80px; align-items:center; justify-content:space-between;">
           <div id="mismatch-preview-label" style="width:15%; text-align:center; transition: opacity 0.5s; opacity: 1;"></div>
           <div class="bars-column mismatch-preview-column">
@@ -1824,32 +2032,15 @@ export default function App() {
           </div>
           <div style="width:15%;"></div>
         </div>
-        <div id="trash-area" style="display:none; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 140px; margin-top: 10px; border-top: 2px dashed #ccc; padding-top: 15px;">
-          <div class="trash-meter-card">
-            <div class="trash-meter-head">
-              <div id="trash-can" class="trash-can-icon">
-                🗑️
-              </div>
-              <div class="trash-meter-copy">
-                <div class="trash-meter-title">移除目標</div>
-                <div id="trash-capacity-label">要拿走：0 格</div>
-              </div>
-            </div>
-            <div id="trash-meter" class="trash-meter-track">
-              <div id="trash-meter-fill" class="trash-meter-fill"></div>
-            </div>
-            <div id="trash-progress" class="trash-progress-copy">0 / 0 格</div>
-            <div id="trash-tooltip" class="trash-status-copy">還沒有移走任何方塊</div>
-            ${showMatchStation ? renderMatchStation() : ''}
-            ${renderPlaybackControlsPanel({
-              className: 'subtraction-playback-controls',
-              buttonClassName: 'subtraction-playback-btn',
-              buttons: [
-                { id: 'step-back-btn', label: '上一步', onClickAttr: 'window._sub.stepBackSubtraction()', disabled: true },
-                { id: 'reset-animation-btn', label: '重看', onClickAttr: 'window._sub.resetSubtractionAnimation()', disabled: true },
-              ],
-            })}
+        <div id="trash-area" style="display:none; position:relative; width:100%; min-height:50px; align-items:flex-start; justify-content:space-between; border-top: 2px dashed #ccc; padding-top: 5px;">
+          <div style="width:15%; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+            <div id="trash-can" style="font-size: 3rem;">🗑️</div>
+            <div style="font-weight:bold; color:var(--dark); font-size:1rem;">垃圾桶</div>
           </div>
+          <div id="trash-content" class="bars-column" style="background: white; padding: 15px 0; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border: 1px solid #eee;">
+            <div style='text-align:center; color:#7f8c8d; padding:10px; font-weight:normal;'>目前垃圾桶是空的</div>
+          </div>
+          <div style="width:15%;"></div>
         </div>
       `
 
@@ -1970,6 +2161,10 @@ export default function App() {
       applyTool,
       toggleWholeNumber,
       toggleNumberLine,
+      triggerErrorMerge,
+      hideErrorMergeBar,
+      updateTrashAreaVisibility,
+      updateTrashTooltip,
       updateSpeed,
       randomChallenge,
       updateUI,

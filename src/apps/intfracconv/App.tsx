@@ -3,6 +3,8 @@ import AppHeader from '../../shared/components/AppHeader'
 import InteractiveBars from '../../shared/components/InteractiveBars'
 import ModeSelector from '../../shared/components/ModeSelector'
 import ConversionPanel from '../../shared/components/ConversionPanel'
+import GuidedTour from '../../shared/components/GuidedTour'
+import { intfracconvTourSteps } from '../../shared/tours/intfracconv'
 import './app.css'
 
 type InputMode = 'whole' | 'fraction' | 'mixed'
@@ -118,7 +120,7 @@ export default function App() {
     <div className="app-container">
       <AppHeader
         leftSlot={<div className="title-badge">整數與分數互換</div>}
-        rightSlot={<></>}
+        rightSlot={<GuidedTour steps={intfracconvTourSteps} />}
       />
 
       <InteractiveBars
@@ -210,14 +212,6 @@ export default function App() {
                 }}
               />
             </div>
-            <button
-              className="btn-confirm"
-              onClick={() => {
-                // Re-render (values are already in state)
-              }}
-            >
-              確定
-            </button>
             <span className="mode-hint">
               網頁版可右點擊,<br />平板可長按以切換模式
             </span>

@@ -26,6 +26,8 @@
   justify-content: space-between;
   gap: 14px;
   flex-wrap: wrap;
+  /* Smooth transition for layout changes (fix019) */
+  transition: all 0.3s ease-in-out;
 }
 
 .comparison-control-group {
@@ -33,6 +35,24 @@
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  /* Smooth transition for content changes (fix019) */
+  transition: all 0.3s ease-in-out;
+}
+
+.comparison-control-group.quick-actions {
+  /* Fade-in animation for smooth appearance (fix019) */
+  animation: fadeInFromBottom 0.3s ease-in-out;
+}
+
+@keyframes fadeInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .comparison-control-group.quick-actions .lang-btn {
@@ -76,6 +96,8 @@
 .comparison-mode-copy {
   color: #557189;
   font-weight: 700;
+  /* Smooth transition for text changes (fix019) */
+  transition: opacity 0.2s ease-in-out;
 }
 
 .comparison-input-grid {
@@ -216,7 +238,8 @@
   background: rgba(255, 255, 255, 0.88);
   box-shadow: 0 16px 28px rgba(39, 79, 110, 0.08);
   padding: 18px;
-  transition: transform 0.12s ease;
+  /* Increased transition duration for smoother mode switching (fix019) */
+  transition: transform 0.4s ease-in-out;
 }
 
 .comparison-row.dragging {
@@ -229,6 +252,8 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 12px;
+  /* Smooth transition for content changes (fix019) */
+  transition: all 0.3s ease-in-out;
 }
 
 .comparison-row-title-wrap {
@@ -259,6 +284,19 @@
   font-size: 0.86rem;
   font-weight: 800;
   padding: 8px 12px;
+  /* Fade-in animation for smooth appearance (fix019) */
+  animation: fadeInFromRight 0.3s ease-in-out;
+}
+
+@keyframes fadeInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .comparison-track-wrap {
@@ -278,7 +316,8 @@
   border-radius: 16px;
   background: #eef4f7;
   overflow: hidden;
-  transition: width 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  /* Increased transition duration for smoother mode switching (fix019) */
+  transition: width 0.4s ease-in-out, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .comparison-bar.interactive {
@@ -314,7 +353,8 @@
 }
 
 .comparison-number-line-wrap {
-  transition: width 0.18s ease;
+  /* Increased transition duration for smoother mode switching (fix019) */
+  transition: width 0.4s ease-in-out;
 }
 
 .comparison-line-shell {

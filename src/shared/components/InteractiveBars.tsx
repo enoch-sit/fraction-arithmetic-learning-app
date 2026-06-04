@@ -196,6 +196,22 @@ export default function InteractiveBars({
             borderRadius: '2px'
           }}
         >
+          {/* Third line at 1/3 height */}
+          <div
+            className="third-line"
+            style={{
+              position: 'absolute',
+              top: '33.333%',
+              left: 0,
+              right: 0,
+              height: '2px',
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              transform: 'translateY(-50%)',
+              zIndex: 1,
+              pointerEvents: 'none'
+            }}
+          />
+
           {/* Center line (visible in fraction mode) */}
           <div
             className="center-line"

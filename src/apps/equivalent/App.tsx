@@ -1,28 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import './app.css'
 import AppHeader from '../../shared/components/AppHeader'
-import LangBtn from '../../shared/components/LangBtn'
 import ControlsPill from '../../shared/components/ControlsPill'
 import ActionButtonRow from '../../shared/components/ActionButtonRow'
 import QuestionBanner from '../../shared/components/QuestionBanner'
 import StepperInput from '../../shared/components/StepperInput'
 import FractionBar from '../../shared/components/FractionBar'
 import NumberLineDisplay from '../../shared/components/NumberLineDisplay'
-
-interface EquivalentFractionsState {
-  mode: 'sync' | 'independent'
-  operation: '×' | '÷'
-  numerator: number
-  denominator: number
-  factorNum: number
-  factorDen: number
-  targetNum: number | null
-  targetDen: number | null
-  showNumberLine: boolean
-  animate: boolean
-  speedMultiplier: number
-  errorMsg: string
-}
 
 const LIMITS = {
   numStart: 20,
@@ -31,421 +15,196 @@ const LIMITS = {
 }
 
 export default function App() {
-  const [state, setState] = useState<EquivalentFractionsState>(() => {
-    const params = new URLSearchParams(window.location.search)
-    const numFromURL = parseInt(params.get('numerator') || '1', 10)
-    const denFromURL = parseInt(params.get('denominator') || '4', 10)
-    const modeFromURL = params.get('mode') === 'independent' ? 'independent' : 'sync'
-    const targetNumFromURL = params.get('targetNum') ? parseInt(params.get('targetNum')!, 10) : null
-    const targetDenFromURL = params.get('targetDen') ? parseInt(params.get('targetDen')!, 10) : null
+  const [mode, setMode] = useState<'sync' | 'independent'>('sync');
+  const [operation, setOperation] = useState<'×' | '÷'>('×');
+  const [numerator, setNumerator] = useState(1);
+  const [denominator, setDenominator] = useState(4);
+  const [factorNum, setFactorNum] = useState(1);
+  const [factorDen, setFactorDen] = useState(1);
+  const [targetNum, setTargetNum] = useState<number | null>(1);
+  const [targetDen, setTargetDen] = useState<number | null>(4);
+  const [showNumberLine, setShowNumberLine] = useState(false);
+  const [animate, setAnimate] = useState(true);
+  const [speedMultiplier, setSpeedMultiplier] = useState(1);
+  const [errorMsg, setErrorMsg] = useState('');
 
-    return {
-      mode: modeFromURL,
-      operation: '×',
-      numerator: Math.max(1, Math.min(numFromURL, LIMITS.numStart)),
-      denominator: Math.max(1, Math.min(denFromURL, LIMITS.denStart)),
-      factorNum: 1,
-      factorDen: 1,
-      targetNum: targetNumFromURL,
-      targetDen: targetDenFromURL,
-      showNumberLine: false,
-      animate: true,
-      speedMultiplier: 1,
-      errorMsg: '',
-    }
-  })
-
-  // Calculation engine
-  const calculateResult = (
-    num: number,
-    den: number,
-    op: '×' | '÷',
-    fNum: number,
-    fDen: number
-  ) => {
-    if (op === '×') {
-      return { resultNum: num * fNum, resultDen: den * fDen }
+  const { resultNum, resultDen } = useMemo(() => {
+    if (operation === '×') {
+      return { resultNum: numerator * factorNum, resultDen: denominator * factorDen };
     } else {
-      if (fDen === 1) return { resultNum: num, resultDen: den }
-      if (num % fDen !== 0 || den % fDen !== 0) {
-        return { resultNum: NaN, resultDen: NaN }
+      if (factorNum !== factorDen) return { resultNum: NaN, resultDen: NaN };
+      if (numerator % factorNum !== 0 || denominator % factorDen !== 0) {
+        return { resultNum: NaN, resultDen: NaN };
       }
-      return { resultNum: num / fDen, resultDen: den / fDen }
+      return { resultNum: numerator / factorNum, resultDen: denominator / factorDen };
     }
-  }
+  }, [numerator, denominator, operation, factorNum, factorDen]);
 
-  const { resultNum, resultDen } = calculateResult(
-    state.numerator,
-    state.denominator,
-    state.operation,
-    state.factorNum,
-    state.factorDen
-  )
-
-  // Validation
   useEffect(() => {
-    if (state.operation === '÷' && state.factorDen !== 1) {
-      if (state.numerator % state.factorDen !== 0 || state.denominator % state.factorDen !== 0) {
-        setState((s) => ({
-          ...s,
-          errorMsg: `⚠️ 除法模式下，分子和分母都必須能被 ${state.factorDen} 整除`,
-        }))
-        return
+    let error = '';
+    if (operation === '÷') {
+      if (factorNum !== factorDen) {
+        error = '⚠️ 除法模式下，分子和分母的除數必須相同';
+      } else if (numerator % factorNum !== 0 || denominator % factorNum !== 0) {
+        error = `⚠️ 除法模式下，分子和分母都必須能被 ${factorNum} 整除`;
       }
     }
+    if (!error && mode === 'independent' && targetNum !== null && targetDen !== null) {
+      if (resultNum !== targetNum || resultDen !== targetDen) {
+        error = '⚠️ 等式兩邊不相等';
+      }
+    }
+    setErrorMsg(error);
+  }, [operation, factorNum, factorDen, numerator, denominator, mode, targetNum, targetDen, resultNum, resultDen]);
 
-    if (state.mode === 'independent' && state.targetNum !== null && state.targetDen !== null) {
+  useEffect(() => {
+    if (mode === 'sync') {
       if (!isNaN(resultNum) && !isNaN(resultDen)) {
-        const leftRatio = state.numerator / state.denominator
-        const rightRatio = state.targetNum / state.targetDen
-        if (Math.abs(leftRatio - rightRatio) > 0.0001) {
-          setState((s) => ({ ...s, errorMsg: '⚠️ 兩邊的分數值不相等' }))
-          return
-        }
+        setTargetNum(resultNum);
+        setTargetDen(resultDen);
+      } else {
+        setTargetNum(null);
+        setTargetDen(null);
       }
     }
+  }, [mode, resultNum, resultDen]);
 
-    setState((s) => ({ ...s, errorMsg: '' }))
-  }, [
-    state.operation,
-    state.factorDen,
-    state.numerator,
-    state.denominator,
-    state.mode,
-    state.targetNum,
-    state.targetDen,
-    resultNum,
-    resultDen,
-  ])
-
-  // Sync mode auto-update
-  useEffect(() => {
-    if (state.mode === 'sync') {
-      if (!isNaN(resultNum) && !isNaN(resultDen)) {
-        setState((s) => ({ ...s, targetNum: resultNum, targetDen: resultDen }))
-      }
+  const handleFactorNumChange = (val: number) => {
+    setFactorNum(val);
+    if (mode === 'sync' || operation === '÷') {
+      setFactorDen(val);
     }
-  }, [state.mode, resultNum, resultDen])
+  };
 
-  // PostMessage API
-  useEffect(() => {
-    const handleMessage = (e: MessageEvent) => {
-      if (typeof e.data !== 'object' || !e.data) return
-
-      if (e.data.type === 'setFraction') {
-        const { numerator, denominator } = e.data
-        if (typeof numerator === 'number' && typeof denominator === 'number') {
-          setState((s) => ({ ...s, numerator, denominator }))
-        }
-      } else if (e.data.type === 'setMode') {
-        if (e.data.mode === 'sync' || e.data.mode === 'independent') {
-          setState((s) => ({ ...s, mode: e.data.mode }))
-        }
-      } else if (e.data.type === 'setTarget') {
-        const { targetNum, targetDen } = e.data
-        if (typeof targetNum === 'number' && typeof targetDen === 'number') {
-          setState((s) => ({ ...s, targetNum, targetDen }))
-        }
-      }
+  const handleFactorDenChange = (val: number) => {
+    setFactorDen(val);
+    if (mode === 'sync' || operation === '÷') {
+      setFactorNum(val);
     }
+  };
 
-    window.addEventListener('message', handleMessage)
-    return () => window.removeEventListener('message', handleMessage)
-  }, [])
-
-  // Handlers
-  const toggleMode = () => {
-    setState((s) => ({ ...s, mode: s.mode === 'sync' ? 'independent' : 'sync' }))
-  }
-
-  const toggleOperation = () => {
-    setState((s) => ({
-      ...s,
-      operation: s.operation === '×' ? '÷' : '×',
-      factorNum: 1,
-      factorDen: 1,
-    }))
-  }
+  const toggleMode = () => setMode(m => m === 'sync' ? 'independent' : 'sync');
+  const toggleOperation = () => setOperation(op => op === '×' ? '÷' : '×');
 
   const handleRandom = () => {
-    const newNum = Math.floor(Math.random() * LIMITS.numStart) + 1
-    const newDen = Math.floor(Math.random() * LIMITS.denStart) + 1
-    setState((s) => ({ ...s, numerator: newNum, denominator: newDen }))
-  }
+    setNumerator(Math.floor(Math.random() * LIMITS.numStart) + 1);
+    setDenominator(Math.floor(Math.random() * LIMITS.denStart) + 1);
+    setFactorNum(1);
+    setFactorDen(1);
+  };
 
   const handleSwap = () => {
-    setState((s) => ({ ...s, numerator: s.denominator, denominator: s.numerator }))
-  }
+    if (targetNum === null || targetDen === null) return;
+    setNumerator(targetNum);
+    setDenominator(targetDen);
+    setTargetNum(numerator);
+    setTargetDen(denominator);
+  };
 
-  const totalSegments =
-    state.operation === '×'
-      ? state.denominator * state.factorDen
-      : state.denominator
-
-  const displayedTargetNum = state.targetNum ?? resultNum
-  const displayedTargetDen = state.targetDen ?? resultDen
-
-  const isResultValid = !isNaN(resultNum) && !isNaN(resultDen)
-  const isMatch =
-    state.mode === 'independent' &&
-    state.targetNum !== null &&
-    state.targetDen !== null &&
-    isResultValid &&
-    Math.abs(state.numerator / state.denominator - state.targetNum / state.targetDen) < 0.0001
+  const isResultValid = !isNaN(resultNum) && !isNaN(resultDen);
+  const isMatch = mode === 'independent' && targetNum !== null && targetDen !== null && isResultValid && resultNum === targetNum && resultDen === targetDen;
+  const totalSegments = operation === '×' ? denominator * factorDen : denominator;
 
   return (
     <div>
-      <AppHeader
-        leftSlot={
-          <h1
-            style={{
-              fontSize: '1.5rem',
-              fontWeight: 'bold',
-              color: 'var(--accent)',
-              margin: 0,
-            }}
-          >
-            相等分數 (約分/擴分)
-          </h1>
-        }
-        rightSlot={<LangBtn />}
-      />
-
-      <QuestionBanner
-        question="如何找到相等的分數？"
-        subtitle="相等分數：使用乘法擴分、除法約分來改變分母"
-      />
+      <AppHeader title="相等分數 (約分/擴分)" />
+      <QuestionBanner question="在空格內填上正確的數字" />
 
       <div className="math-engine">
-        {/* Left fraction */}
         <div className="fraction-box">
-          <input
-            type="text"
-            className="fraction-input num-target"
-            value={state.numerator}
-            readOnly
-          />
+          <input type="text" className="fraction-input" value={numerator} readOnly />
           <div className="fraction-line" />
-          <input
-            type="text"
-            className="fraction-input num-target"
-            value={state.denominator}
-            readOnly
-          />
+          <input type="text" className="fraction-input" value={denominator} readOnly />
         </div>
 
         <div className="eq-sign">=</div>
 
-        {/* Process container */}
         <div className="process-container">
           <div className="row-align">
-            <div className="base-num">{state.numerator}</div>
-            <div className="op-select" onClick={toggleOperation}>
-              {state.operation}
-            </div>
-            <StepperInput
-              id="factor_num"
-              defaultValue={state.factorNum}
-              min={1}
-              max={LIMITS.factor}
-              wrapperClassName="factor-wrap"
-              onInput={(val) => setState((s) => ({ ...s, factorNum: val }))}
-            />
+            <div className="base-num">{numerator}</div>
+            <div className="op-select" onClick={toggleOperation}>{operation}</div>
+            <StepperInput id="factor_num" value={factorNum} min={1} max={LIMITS.factor} onInput={handleFactorNumChange} />
           </div>
-
           <div className="row-align">
-            <div className="base-num">{state.denominator}</div>
-            <div className="op-select" onClick={toggleOperation}>
-              {state.operation}
-            </div>
-            <StepperInput
-              id="factor_den"
-              defaultValue={state.factorDen}
-              min={1}
-              max={LIMITS.factor}
-              wrapperClassName="factor-wrap"
-              onInput={(val) => setState((s) => ({ ...s, factorDen: val }))}
-            />
+            <div className="base-num">{denominator}</div>
+            <div className="op-select" onClick={toggleOperation}>{operation}</div>
+            <StepperInput id="factor_den" value={factorDen} min={1} max={LIMITS.factor} onInput={handleFactorDenChange} disabled={mode === 'sync' || operation === '÷'} />
           </div>
         </div>
 
-        <div className="eq-sign">
-          {state.mode === 'independent' && !isMatch ? '≠' : '='}
-        </div>
+        <div className="eq-sign">{mode === 'independent' && !isMatch ? '≠' : '='}</div>
 
-        {/* Right fraction */}
         <div className="fraction-box">
-          {state.mode === 'sync' ? (
+          {mode === 'sync' ? (
             <>
-              <input
-                type="text"
-                className="fraction-input num-target"
-                value={isResultValid ? displayedTargetNum : '?'}
-                readOnly
-              />
+              <input type="text" className="fraction-input" value={targetNum ?? '?'} readOnly />
               <div className="fraction-line" />
-              <input
-                type="text"
-                className="fraction-input num-target"
-                value={isResultValid ? displayedTargetDen : '?'}
-                readOnly
-              />
+              <input type="text" className="fraction-input" value={targetDen ?? '?'} readOnly />
             </>
           ) : (
             <>
-              <StepperInput
-                id="target_num"
-                defaultValue={state.targetNum ?? 1}
-                min={1}
-                max={LIMITS.numStart * LIMITS.factor}
-                wrapperClassName="start-wrap"
-                inputClassName="num-target"
-                onInput={(val) => setState((s) => ({ ...s, targetNum: val }))}
-              />
+              <StepperInput id="target_num" value={targetNum ?? 1} min={1} max={LIMITS.numStart * LIMITS.factor} onInput={setTargetNum} />
               <div className="fraction-line" />
-              <StepperInput
-                id="target_den"
-                defaultValue={state.targetDen ?? 1}
-                min={1}
-                max={LIMITS.denStart * LIMITS.factor}
-                wrapperClassName="start-wrap"
-                inputClassName="num-target"
-                onInput={(val) => setState((s) => ({ ...s, targetDen: val }))}
-              />
+              <StepperInput id="target_den" value={targetDen ?? 1} min={1} max={LIMITS.denStart * LIMITS.factor} onInput={setTargetDen} />
             </>
           )}
         </div>
       </div>
 
-      {state.errorMsg && <div id="error_msg">{state.errorMsg}</div>}
+      {errorMsg && <div id="error_msg">{errorMsg}</div>}
 
       <div style={{ marginBottom: '15px' }}>
-        <StepperInput
-          id="numerator"
-          defaultValue={state.numerator}
-          min={1}
-          max={LIMITS.numStart}
-          wrapperClassName="start-wrap"
-          inputClassName="num-target"
-          onInput={(val) => setState((s) => ({ ...s, numerator: val }))}
-        />
-        <StepperInput
-          id="denominator"
-          defaultValue={state.denominator}
-          min={1}
-          max={LIMITS.denStart}
-          wrapperClassName="start-wrap"
-          inputClassName="num-target"
-          onInput={(val) => setState((s) => ({ ...s, denominator: val }))}
-        />
+        <StepperInput id="numerator" value={numerator} min={1} max={LIMITS.numStart} onInput={setNumerator} />
+        <StepperInput id="denominator" value={denominator} min={1} max={LIMITS.denStart} onInput={setDenominator} />
       </div>
 
       <div className="visual-stack">
         <FractionBar
-          label={`原始分數: ${state.numerator}/${state.denominator}`}
-          numerator={state.numerator}
-          denominator={state.denominator}
-          totalSegments={state.denominator}
-          fillColor="var(--accent)"
-          operation={state.operation}
-          factorNum={state.factorNum}
-          factorDen={state.factorDen}
-          animate={false}
-          speedMultiplier={state.speedMultiplier}
+          label={`原始分數: ${numerator}/${denominator}`}
+          numerator={numerator}
+          denominator={denominator}
+          totalSegments={denominator}
         />
-
-        {isResultValid && (
+        {isResultValid && targetNum !== null && targetDen !== null && (
           <FractionBar
-            label={`結果分數: ${displayedTargetNum}/${displayedTargetDen}`}
-            numerator={displayedTargetNum}
-            denominator={displayedTargetDen}
+            label={`結果分數: ${targetNum}/${targetDen}`}
+            numerator={targetNum}
+            denominator={targetDen}
             totalSegments={totalSegments}
-            fillColor="var(--accent)"
-            operation={state.operation}
-            factorNum={state.factorNum}
-            factorDen={state.factorDen}
-            animate={state.animate}
-            speedMultiplier={state.speedMultiplier}
+            animate={animate}
+            speedMultiplier={speedMultiplier}
           />
         )}
       </div>
 
-      <NumberLineDisplay
-        denominator={state.denominator}
-        totalSegments={totalSegments}
-        visible={state.showNumberLine}
-      />
+      <NumberLineDisplay denominator={denominator} totalSegments={totalSegments} visible={showNumberLine} />
 
       <ActionButtonRow
-        primary={{
-          id: 'btn_random',
-          label: '🎲 隨機',
-          onClick: handleRandom,
-        }}
-        secondary={{
-          id: 'btn_swap',
-          label: '⇅ 交換',
-          onClick: handleSwap,
-        }}
+        primary={{ id: 'btn_random', label: '🎲 隨機', onClick: handleRandom }}
+        secondary={{ id: 'btn_swap', label: '⇅ 交換', onClick: handleSwap }}
       />
 
-      <button
-        id="btn_toggle_sync"
-        onClick={toggleMode}
-        style={{
-          margin: '10px auto',
-          display: 'block',
-          padding: '10px 20px',
-          fontSize: '1rem',
-          fontWeight: 'bold',
-          borderRadius: '8px',
-          border: '2px solid var(--accent)',
-          background: state.mode === 'sync' ? 'var(--accent)' : 'white',
-          color: state.mode === 'sync' ? 'white' : 'var(--accent)',
-          cursor: 'pointer',
-        }}
-      >
-        {state.mode === 'sync' ? '🔒 同步模式' : '🔓 獨立模式'}
+      <button id="btn_toggle_sync" onClick={toggleMode} style={{
+        margin: '10px auto', display: 'block', padding: '10px 20px', fontSize: '1rem', fontWeight: 'bold',
+        borderRadius: '8px', border: '2px solid var(--accent)',
+        background: mode === 'sync' ? 'var(--accent)' : 'white',
+        color: mode === 'sync' ? 'white' : 'var(--accent)',
+        cursor: 'pointer',
+      }}>
+        {mode === 'sync' ? '🔒 同步模式' : '🔓 獨立模式'}
       </button>
 
-      <ControlsPill
-        speedId="speed"
-        speedLabelId="speed_label"
-        onSpeedChange={(val) => setState((s) => ({ ...s, speedMultiplier: val }))}
-      >
-        <label
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-            cursor: 'pointer',
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={state.showNumberLine}
-            onChange={(e) =>
-              setState((s) => ({ ...s, showNumberLine: e.target.checked }))
-            }
-          />
+      <ControlsPill onSpeedChange={setSpeedMultiplier}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+          <input type="checkbox" checked={showNumberLine} onChange={e => setShowNumberLine(e.target.checked)} />
           數線
         </label>
-        <label
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-            cursor: 'pointer',
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={state.animate}
-            onChange={(e) => setState((s) => ({ ...s, animate: e.target.checked }))}
-          />
+        <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+          <input type="checkbox" checked={animate} onChange={e => setAnimate(e.target.checked)} />
           動畫
         </label>
       </ControlsPill>
     </div>
   )
 }
+

@@ -46,7 +46,7 @@ export const additionGuideContent: PageGuideContent = {
     {
       id: 'answer-zone',
       element: '#bottom-answer-zone',
-      side: 'top',
+      side: 'bottom',
       title: '✏️ 填寫答案',
       description: '在這裡填寫你計算的結果。<br>系統會自動判斷對錯！',
     },

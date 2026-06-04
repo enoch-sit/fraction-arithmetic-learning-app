@@ -290,6 +290,7 @@ export default function App() {
       if (target.id === 'frac1-group' || target.id === 'frac2-group') return 'fraction'
       if (target.id === 'ans-w' || target.id === 'ans-num' || target.id === 'ans-den' || target.closest('#bottom-answer-zone')) return 'answer'
       if (target.classList.contains('tool-btn') || target.closest('.denominator-tool-group')) return 'tool'
+      if (target.id === 'bar3-wrap') return 'dropzone'
       return 'default'
     }
 
@@ -310,6 +311,11 @@ export default function App() {
           left = rect.left + (rect.width / 2) - (cueRect.width / 2)
           top = rect.bottom + 12
         }
+      } else if (role === 'dropzone') {
+        // Position tooltip inside/overlaying the drop zone
+        // Centered horizontally, positioned in the upper portion
+        left = rect.left + (rect.width / 2) - (cueRect.width / 2)
+        top = rect.top + 20
       }
 
       if (top < 12) top = rect.bottom + 10
@@ -1022,7 +1028,10 @@ export default function App() {
         wrap2.ondragover = null; wrap2.ondrop = null; wrap2.ondragleave = null
         updatePlaybackControls()
       } else {
-        row3.style.display = 'none'
+        // Don't hide bar3-row if it's already visible (error merge mode)
+        if (row3.style.display !== 'flex') {
+          row3.style.display = 'none'
+        }
         convertBarToDraggable(1, cd1, 'var(--red)')
         convertBarToDraggable(2, cd2, 'var(--blue)')
 
@@ -1367,14 +1376,7 @@ export default function App() {
         <div id="drag-instruction" className="instruction-text">💡 準備中...</div>
         <div id="anim-area"></div>
 
-        <PlaybackControlsPanel
-          className="addition-playback-controls"
-          buttonClassName="addition-playback-btn"
-          buttons={[
-            { id: 'addition-step-back-btn', label: '上一步', onClick: () => (window as any)._add?.stepBackAddition(), disabled: true },
-            { id: 'addition-reset-animation-btn', label: '重看', onClick: () => (window as any)._add?.resetAdditionAnimation(), disabled: true },
-          ]}
-        />
+        {/* Removed non-functional buttons「上一步」and「重看」per fix012 */}
 
         <div id="bottom-answer-zone">
           <div className="answer-zone-header">

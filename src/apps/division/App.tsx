@@ -1192,8 +1192,7 @@ export default function App() {
           className="division-playback-controls"
           buttonClassName="division-playback-btn"
           buttons={[
-            { id: 'division-step-back-btn', label: '上一步', onClick: () => (window as any)._div?.stepBackDivision(), disabled: true },
-            { id: 'division-reset-animation-btn', label: '重看', onClick: () => (window as any)._div?.resetDivisionAnimation(), disabled: true },
+            {/* Removed non-functional buttons「上一步」and「重看」per fix012 */}
           ]}
         />
 

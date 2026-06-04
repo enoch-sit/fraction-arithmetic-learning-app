@@ -1,0 +1,304 @@
+:root {
+    --primary-red: #ff3333;
+    --border-blue: #0000ff;
+    --integer-green: #009900; 
+    --bg-gray: #f9f9f9;
+}
+
+.app-container {
+    width: 850px;
+    background: white;
+    border: 1px solid #999;
+    box-shadow: 4px 4px 10px rgba(0,0,0,0.1);
+    padding: 25px;
+    margin: 0 auto;
+}
+
+.header {
+    border-bottom: 2px solid #000080;
+    margin-bottom: 20px;
+    padding-bottom: 5px;
+    color: #000080;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+.bars-container {
+    display: flex;
+    flex-wrap: nowrap; 
+    column-gap: 0px; 
+    row-gap: 50px;    
+    margin-bottom: 40px;
+    min-height: 80px;
+    align-items: flex-start;
+    padding: 20px 50px; 
+    background: #fafafa;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+.bar-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    margin-right: -2px; 
+}
+
+.unit-bar {
+    position: relative;
+    display: flex;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, calc(1 - var(--f, 0)));
+    height: var(--bar-h, 45px);
+    margin-top: calc(15px * var(--f, 0));
+    margin-bottom: calc(5px * var(--f, 0));
+    border-radius: 2px;
+}
+
+.center-line {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: rgba(51, 51, 51, var(--f, 0));
+    transform: translateY(-50%);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.border-overlay {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    border: 2px solid rgba(0, 0, 255, calc(1 - var(--f, 0)));
+    z-index: 4;
+    pointer-events: none;
+    border-radius: 2px;
+}
+
+.unit-bar::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: calc(100% * (1 - var(--f, 0)) + 12px * var(--f, 0));
+    background-color: #666;
+    opacity: var(--f, 0);
+    z-index: 3;
+    pointer-events: none;
+}
+
+.cell {
+    position: relative;
+    flex: 1;
+    cursor: pointer;
+    z-index: 2;
+    background-color: transparent;
+    transition: background-color 0.2s;
+}
+
+.cell.filled {
+    background-color: var(--primary-red);
+}
+
+.cell:hover {
+    background-color: rgba(255, 51, 51, 0.2);
+}
+
+.cell.filled:hover {
+    background-color: #ff6666;
+}
+
+.cell::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: calc(100% * (1 - var(--f, 0)) + 12px * var(--f, 0));
+    background-color: #666;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.cell:last-child::after {
+    opacity: var(--f, 0);
+}
+
+.label-row {
+    position: relative;
+    height: 30px;
+    margin-top: calc(5px + 5px * var(--f, 0)); 
+    width: 100%;
+}
+
+.bar-label {
+    position: absolute;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    display: flex;
+    justify-content: center;
+    top: 0;
+}
+
+.bar-label .main {
+    font-weight: bold;
+    font-size: 15px;
+    color: var(--integer-green); 
+}
+
+.stacked-fraction {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    vertical-align: middle;
+    font-size: 13px;
+    line-height: 1.2;
+}
+
+.stacked-fraction .num {
+    border-bottom: 1.5px solid #333;
+    padding: 0 2px;
+    width: 100%;
+    text-align: center;
+    color: var(--primary-red);
+    font-weight: bold;
+}
+
+.stacked-fraction .den {
+    padding: 0 2px;
+    width: 100%;
+    text-align: center;
+    color: var(--border-blue);
+}
+
+.mixed-number {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.mixed-number .whole {
+    font-size: 15px;
+    font-weight: bold;
+    color: var(--integer-green); 
+}
+
+.dashboard {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 20px;
+    border-top: 2px solid #ccc;
+    padding-top: 20px;
+}
+
+.input-section {
+    background: var(--bg-gray);
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    position: relative;
+}
+
+.fraction-ui {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+}
+
+input[type="number"] {
+    width: 55px;
+    padding: 5px;
+    text-align: center;
+    font-size: 1.2em;
+    font-weight: bold;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+}
+
+#inputWhole {
+    border-color: var(--integer-green); 
+    background-color: white; 
+}
+
+#inputNum {
+    color: var(--primary-red);
+    border-color: #ff9999;
+}
+
+#inputDen {
+    color: var(--border-blue);
+    border-color: #9999ff;
+}
+
+.f-line {
+    width: 100%;
+    height: 2px;
+    background: black;
+    margin: 4px 0;
+}
+
+.btn-confirm {
+    padding: 6px 15px;
+    font-size: 1em;
+    font-weight: bold;
+    background-color: #000080;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-confirm:hover {
+    background-color: #0000b3;
+}
+
+.mode-hint {
+    color: #888;
+    font-size: 0.85em;
+    margin-left: 5px;
+}
+
+.info-section {
+    padding: 15px;
+    border: 1px solid #cbd5e0;
+    background-color: #fff;
+    border-radius: 5px;
+}
+
+.info-title {
+    color: #2d3748;
+    font-weight: bold;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #edf2f7;
+}
+
+#customContextMenu {
+    display: none;
+    position: absolute;
+    background: white;
+    border: 1px solid #ccc;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    z-index: 1000;
+    border-radius: 4px;
+}
+
+#customContextMenu div {
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+#customContextMenu div:hover {
+    background-color: #f0f0f0;
+}

@@ -417,7 +417,10 @@ body {
 .input-wrapper input.num-input { color: var(--primary); }
 .input-wrapper input.den-input { color: var(--grid-dark); }
 .input-wrapper input::-webkit-inner-spin-button,
-.input-wrapper input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.input-wrapper input::-webkit-outer-spin-button { 
+  opacity: 1; 
+  height: 20px; 
+}
 
 .stepper-btn-group {
   display: flex; flex-direction: column;
@@ -522,7 +525,10 @@ body {
   -moz-appearance: textfield;
 }
 .whole-input::-webkit-inner-spin-button,
-.whole-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.whole-input::-webkit-outer-spin-button { 
+  opacity: 1; 
+  height: 20px; 
+}
 .whole-input:focus { border-color: var(--primary); box-shadow: 0 0 8px rgba(52,152,219,0.4); }
 .frac          { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; }
 .frac-input    {
@@ -532,7 +538,10 @@ body {
   -moz-appearance: textfield;
 }
 .frac-input::-webkit-inner-spin-button,
-.frac-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.frac-input::-webkit-outer-spin-button { 
+  opacity: 1; 
+  height: 20px; 
+}
 .frac-input:focus { border-color: var(--primary); box-shadow: 0 0 8px rgba(52,152,219,0.4); }
 
 /* answer frac-line reuses .fraction-line style but at smaller scale */

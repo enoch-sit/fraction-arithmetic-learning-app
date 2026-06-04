@@ -528,13 +528,12 @@ export default function App() {
         ))}
       </section>
 
-      <section className="comparison-summary-panel">
-        <div className="comparison-summary-title">目前排序</div>
-        <div className="comparison-summary-copy">{getComparisonSummary(visibleEntries)}</div>
-        {!isSyncMode && !widthsMatch ? (
+      {/* Removed comparison-summary-panel per fix018 - shows answer to students */}
+      {!isSyncMode && !widthsMatch ? (
+        <section className="comparison-warning-panel">
           <div className="comparison-warning">⚠️ 長條圖整體長度不一致，請先拖曳到相同長度再比較。</div>
-        ) : null}
-      </section>
+        </section>
+      ) : null}
 
       <section className="comparison-visual-stack">
         {visibleEntries.map((entry, index) => {

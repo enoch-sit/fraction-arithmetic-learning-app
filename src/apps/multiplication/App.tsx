@@ -162,6 +162,12 @@ export default function App() {
         ansZone.style.display = 'none'
         ansZone.style.opacity = '0'
       }
+      // Reset bars to non-clickable state
+      const wrap = document.getElementById('main-bar-wrap') as HTMLElement | null
+      if (wrap) {
+        wrap.style.cursor = 'default'
+        wrap.title = ''
+      }
       const feedback = document.getElementById('feedback') as HTMLElement | null
       if (feedback) {
         feedback.style.opacity = '0'
@@ -532,6 +538,8 @@ export default function App() {
 
       const wrap = document.getElementById('main-bar-wrap')!
       wrap.innerHTML = ''
+      wrap.style.cursor = 'default'
+      wrap.title = ''
 
       animBlocks = []
       const dashedLines: HTMLElement[] = []
@@ -640,7 +648,12 @@ export default function App() {
       isAnimating = false
 
       document.getElementById('drag-instruction')!.innerHTML =
-        `💡 現在，根據最終顯示的紅色方塊填寫答案吧！`
+        `💡 現在，根據最終顯示的紅色方塊填寫答案吧！<span style="color: #e74c3c; font-weight: bold;">（可點擊長條圖重新排列方塊）</span>`
+
+      // Make bars clickable for rearranging
+      const wrap = document.getElementById('main-bar-wrap')!
+      wrap.style.cursor = 'pointer'
+      wrap.title = '點擊重新排列方塊'
 
       const vals = getSafeValues()
       const resultD = vals.d1 * vals.d2
@@ -1003,7 +1016,13 @@ export default function App() {
               }}
             />
             <div className="bars-column">
-              <div id="main-bar-wrap" className="bar-wrap-container" />
+              <div 
+                id="main-bar-wrap" 
+                className="bar-wrap-container"
+                onClick={() => (window as any)._mul?.toggleRearrange()}
+                style={{ cursor: 'default' }}
+                title=""
+              />
               <div id="bar1-nl" className="nl-wrap-container" style={{ display: 'none' }} />
             </div>
             <div style={{ width: '15%' }} />
@@ -1014,8 +1033,7 @@ export default function App() {
           className="multiplication-playback-controls"
           buttonClassName="multiplication-playback-btn"
           buttons={[
-            { id: 'multiplication-step-back-btn', label: '上一步', onClick: () => (window as any)._mul?.stepBackMultiplication(), disabled: true },
-            { id: 'multiplication-reset-animation-btn', label: '重看', onClick: () => (window as any)._mul?.resetMultiplicationAnimation(), disabled: true },
+            {/* Removed non-functional buttons「上一步」and「重看」per fix012 */}
           ]}
         />
 

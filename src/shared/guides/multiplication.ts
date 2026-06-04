@@ -43,7 +43,7 @@ export const multiplicationGuideContent: PageGuideContent = {
     {
       id: 'answer-zone',
       element: '#bottom-answer-zone',
-      side: 'top',
+      side: 'bottom',
       title: '✏️ 填寫答案',
       description: '在這裡輸入你算出來的乘積。<br>記得化簡！系統會告訴你是否正確。',
     },
