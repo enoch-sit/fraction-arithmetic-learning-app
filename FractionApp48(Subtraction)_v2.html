@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FractionApp48(Subtraction) — v2 prototype</title>
+
+    <link rel="stylesheet" href="css/arith-common.css">
+    <link rel="stylesheet" href="css/nav.css">
+    <link rel="stylesheet" href="css/FractionApp48.css">
+    <link rel="stylesheet" href="css/bar-component.css">
+
+    <style>
+        /* ===== v2 prototype-only styles ===== */
+
+        .proto-badge {
+            background: #8e44ad; color: #fff; font-size: 0.8rem; font-weight: bold;
+            padding: 3px 10px; border-radius: 999px; margin-left: 8px; vertical-align: middle;
+        }
+
+        /* Tappable fraction cards — make them look like buttons, not just inputs */
+        .mixed-frac {
+            background: #fff; border: 2px solid #d9e2ec; box-shadow: 0 3px 0 #d0d9e3, 0 4px 10px rgba(0,0,0,0.06);
+            padding: 8px 12px 22px; position: relative; transition: transform .12s, box-shadow .12s, border-color .2s;
+        }
+        .mixed-frac::after {
+            /* content: "👆 點我看圖形"; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); */
+            font-size: 0.72rem; font-weight: bold; color: var(--blue); white-space: nowrap; opacity: 0.9;
+        }
+        /* .mixed-frac.revealed::after { content: "✅ 已顯示（再點可重置）"; color: var(--success); } */
+        .mixed-frac.no-card { box-shadow: none !important; border: none !important; background: transparent !important; animation: none !important; padding: 5px !important; }
+        .mixed-frac.no-card::after { content: none; }
+        .mixed-frac:hover { border-color: var(--blue); }
+        .mixed-frac:active { transform: translateY(3px); box-shadow: 0 0 0 #d0d9e3, 0 2px 6px rgba(0,0,0,0.08); }
+        #frac1-group { box-shadow: 0 3px 0 #f0b6af, 0 4px 10px rgba(0,0,0,0.06); }
+        #frac2-group { box-shadow: 0 3px 0 #aacbe6, 0 4px 10px rgba(0,0,0,0.06); }
+        @keyframes cardPulse { 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-4px);} }
+        .mixed-frac:not(.revealed) { animation: cardPulse 1.8s ease-in-out infinite; }
+
+        /* chips */
+        .chip-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 6px 0 2px; }
+        .target-chip, .counter-chip {
+            display: none; align-items: center; gap: 6px; font-size: 1.05rem; font-weight: bold;
+            padding: 8px 16px; border-radius: 999px; background: #eef3f8; color: var(--dark); border: 2px solid #d9e2ec;
+        }
+        .target-chip.ok, .counter-chip.ok { background: #e7f7ee; border-color: var(--success); color: var(--success); }
+        .target-chip.warn, .counter-chip.warn { background: #fff4e6; border-color: var(--orange); color: var(--orange); }
+        .counter-chip b { font-size: 1.3rem; color: var(--red); }
+        .no-value { font-size: 1.6rem; font-weight: bold; color: #b0b8c0; letter-spacing: 3px; }
+
+        /* tool buttons pulse to invite equalizing when denominators differ */
+        @keyframes btnPulse { 0%,100%{ transform: scale(1);} 50%{ transform: scale(1.08);} }
+        .tool-btn.pulse { animation: btnPulse 1s ease-in-out infinite; box-shadow: 0 0 0 3px rgba(230,126,34,0.4); }
+
+        /* one-time pulse on cells when re-split */
+        @keyframes splitPulse { 0%{ box-shadow: inset 0 0 0 2px var(--orange); } 100%{ box-shadow: none; } }
+        .piece-cell.just-split { animation: splitPulse .9s ease-out; }
+
+        /* draggable active piece */
+        .piece-cell.grabbable { cursor: grab; }
+        .piece-cell.grabbable:active { cursor: grabbing; }
+        /* top pieces that have already been moved down into the tray */
+        .piece-cell.gone { background: transparent; border: 1px dashed rgba(231,76,60,0.35); opacity: 0.5; }
+
+        /* bottom take-away tray (absolute-positioned bar) */
+        .tray-row { margin-top: 6px; padding-top: 10px; border-top: 2px dashed #ccc; }
+        .dark-tag { background: var(--dark); }
+        #bar3-wrap { min-height: 50px; }
+        .tray-bar { position: relative; width: 100%; height: 50px; border: 3px solid #b9c4cf; border-radius: 4px; background: #fafcfe; box-sizing: border-box; overflow: hidden; }
+        .tray-whole-line { position: absolute; top: 0; height: 100%; width: 3px; background: var(--dark); transform: translateX(-50%); z-index: 4; }
+        /* the transparent chunk that must be taken away (= subtrahend) */
+        .tray-ghost { position: absolute; top: 0; left: 0; height: 100%; background: rgba(52,152,219,0.12); border-right: 2px dashed var(--blue); box-sizing: border-box; z-index: 1; }
+        .tray-ghost-line { position: absolute; top: 0; height: 100%; width: 1px; background: rgba(52,152,219,0.5); transform: translateX(-50%); }
+        /* red pieces dragged into the tray */
+        .tray-red { position: absolute; top: 0; height: 100%; background: var(--red); opacity: 0.85; border-right: 1px solid rgba(255,255,255,0.5); box-sizing: border-box; z-index: 2; }
+        .tray-red.grabbable { pointer-events: auto; cursor: grab; touch-action: none; box-shadow: inset 0 0 0 2px #fff, 0 0 10px 2px rgba(241,196,15,0.85); z-index: 5; }
+        .tray-red.grabbable:active { cursor: grabbing; }
+        /* where the next red piece will land */
+        .tray-next { position: absolute; top: 0; height: 100%; box-shadow: inset 0 0 0 2px var(--red); z-index: 3; }
+        .tray-next::after { content: "👇"; position: absolute; top: -24px; left: 50%; transform: translateX(-50%); font-size: 1.2rem; animation: tapBob .9s ease-in-out infinite; }
+        .bar-wrap-container.tray-hot .tray-bar { outline: 3px solid var(--red); outline-offset: 2px; }
+
+        /* the piece that flies from the red bar into the tray */
+        .fly-piece { background: var(--red); opacity: 0.9; border: 2px solid #fff; border-radius: 4px; box-sizing: border-box; pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
+
+        #swap-note { display: none; text-align: center; font-size: 0.95rem; color: var(--orange); margin-top: 4px; }
+
+        /* bar rows */
+        .bar-row { position: relative; width: 100%; min-height: 70px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .bar-label { width: 16%; text-align: center; transition: opacity .4s; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .tool-col { width: 16%; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+        .tool-btn.dimmed { opacity: 0.35; }
+        .bar-tag { font-size: 0.8rem; font-weight: bold; padding: 2px 8px; border-radius: 6px; color: #fff; }
+        .red-tag { background: var(--red); }
+        .blue-tag { background: var(--blue); }
+
+        /* tappable piece cells */
+        .bar-unit.cell-unit { display: flex; overflow: visible; }
+        .piece-cell { flex: 1 1 0; height: 100%; box-sizing: border-box; border-right: 1px solid rgba(44,62,80,0.45); position: relative; transition: background .25s, opacity .25s, box-shadow .15s; }
+        .piece-cell:last-child { border-right: none; }
+        .piece-cell.red { background: var(--red); opacity: 0.85; }
+        .piece-cell.blue { background: var(--blue); opacity: 0.85; }
+        /* transparent "ghost" blue bar = the take-away target the child lays red onto */
+        .piece-cell.blue-ghost { background: rgba(52,152,219,0.14); border-right: 1px dashed rgba(52,152,219,0.6); }
+        .piece-cell.blue-ghost:last-child { border-right: none; }
+        .piece-cell.empty { background: transparent; }
+        .piece-cell.removed { background: repeating-linear-gradient(45deg, #eee, #eee 4px, #e0e0e0 4px, #e0e0e0 8px); opacity: 0.6; }
+
+        /* red pieces laid onto the transparent blue bar (absolute overlay) */
+        #bar2-wrap { position: relative; }
+        .blue-red-overlay { position: absolute; top: 50%; left: 0; transform: translateY(-50%); width: 100%; height: 50px; z-index: 6; pointer-events: none; }
+        .blue-red-overlay .ov-red { position: absolute; top: 0; height: 100%; background: var(--red); opacity: 0.85; border-right: 1px solid rgba(255,255,255,0.5); box-sizing: border-box; }
+        .blue-red-overlay .ov-red.grabbable { pointer-events: auto; cursor: grab; touch-action: none; box-shadow: inset 0 0 0 2px #fff, 0 0 10px 2px rgba(241,196,15,0.85); z-index: 7; }
+        .blue-red-overlay .ov-red.grabbable:active { cursor: grabbing; }
+        .blue-red-overlay .ov-next { position: absolute; top: 0; height: 100%; box-shadow: inset 0 0 0 2px var(--red); }
+        .blue-red-overlay .ov-next::after { content: "👇"; position: absolute; top: -24px; left: 50%; transform: translateX(-50%); font-size: 1.2rem; animation: tapBob .9s ease-in-out infinite; }
+        /* drop / take-back highlights */
+        .bar-wrap-container.drop-hot { outline: 3px solid var(--red); outline-offset: 2px; border-radius: 6px; }
+        .bar-wrap-container.back-hot { outline: 3px solid var(--success); outline-offset: 2px; border-radius: 6px; }
+        .piece-cell.active { cursor: pointer; box-shadow: inset 0 0 0 3px #fff, 0 0 12px 3px rgba(241,196,15,0.9); z-index: 6; }
+        .piece-cell.active::after {
+            content: "👆"; position: absolute; top: -26px; left: 50%; transform: translateX(-50%);
+            font-size: 1.3rem; animation: tapBob .9s ease-in-out infinite;
+        }
+        @keyframes tapBob { 0%,100%{ transform: translateX(-50%) translateY(0);} 50%{ transform: translateX(-50%) translateY(-5px);} }
+        .piece-cell.answer-glow { background: var(--red); opacity: 1; box-shadow: inset 0 0 0 2px #fff, 0 0 14px 3px rgba(39,174,96,0.85); }
+
+        /* mismatch error feedback */
+        @keyframes shake { 0%,100%{ transform: translateX(0);} 20%{ transform: translateX(-7px);} 40%{ transform: translateX(7px);} 60%{ transform: translateX(-5px);} 80%{ transform: translateX(5px);} }
+        .bar-row.shake { animation: shake .5s ease; }
+        .flash-line { background: var(--red) !important; box-shadow: 0 0 6px 2px rgba(231,76,60,0.8); }
+
+        /* answer band wording */
+        #result-word { color: var(--red); }
+
+        /* hint finger */
+        #hint-finger { position: fixed; font-size: 3.4rem; z-index: 10000; pointer-events: none; display: none; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3)); transform-origin: top left; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .mixed-frac:not(.revealed), .piece-cell.active::after, .bar-row.shake { animation: none !important; }
+            .piece-cell { transition: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="header-left">
+            <div class="title-badge">異分母分數減法 <span class="proto-badge">v2 原型</span></div>
+        </div>
+        <div class="header-right">
+            <div class="controls-pill">
+                <label class="checkbox-label"><input type="checkbox" id="show-whole-cb" onchange="toggleWholeNumber()"> 顯示帶分數</label>
+                <span class="divider"></span>
+                <label class="checkbox-label"><input type="checkbox" id="show-nl-cb" onchange="toggleNumberLine()" checked> 顯示數線</label>
+                <span class="divider"></span>
+                <div class="speed-ctrl">
+                    <label for="speed-slider">動畫速度: <span id="speed-val" style="color: var(--blue);">1.0</span>x</label>
+                    <input type="range" id="speed-slider" min="0.5" max="3" step="0.1" value="1.0" oninput="updateSpeed()">
+                </div>
+            </div>
+            <button class="lang-btn btn-random" onclick="randomChallenge()">🎲 隨機出題</button>
+        </div>
+    </div>
+
+    <div id="word-problem" class="word-problem"></div>
+
+    <div class="answer-zone">
+        <div class="formula">
+            <div class="mixed-frac" id="frac1-group" onclick="onFracClick(1)">
+                <input type="number" class="whole-input" id="w1" placeholder=" " min="0" max="10" oninput="updateUI()" onchange="updateUI()">
+                <div class="frac">
+                    <input type="number" class="frac-input" id="n1" value="1" min="1" max="100" oninput="updateUI()" onchange="updateUI()">
+                    <div class="frac-line"></div>
+                    <input type="number" class="frac-input" id="d1" value="2" min="1" max="100" oninput="updateUI()" onchange="updateUI()">
+                </div>
+            </div>
+            <span>-</span>
+            <div class="mixed-frac" id="frac2-group" onclick="onFracClick(2)">
+                <input type="number" class="whole-input" id="w2" placeholder=" " min="0" max="10" oninput="updateUI()" onchange="updateUI()">
+                <div class="frac">
+                    <input type="number" class="frac-input" id="n2" value="1" min="1" max="100" oninput="updateUI()" onchange="updateUI()">
+                    <div class="frac-line"></div>
+                    <input type="number" class="frac-input" id="d2" value="3" min="1" max="100" oninput="updateUI()" onchange="updateUI()">
+                </div>
+            </div>
+        </div>
+        <div id="swap-note">🔁 為了讓答案不是負數，已自動把比較大的分數放在前面。</div>
+    </div>
+
+    <div class="animation-zone" id="anim-zone">
+        <div id="drag-instruction" class="instruction-text">💡 準備中...</div>
+
+        <div class="chip-row">
+            <div id="target-chip" class="target-chip"></div>
+            <div id="counter-chip" class="counter-chip"></div>
+        </div>
+
+        <div id="anim-area"></div>
+
+        <div id="bottom-answer-zone">
+            <div id="bot-public-unit" style="font-size: 1.1rem; color: var(--blue); margin-bottom: 5px; font-weight: bold; background: #e8f4f8; padding: 5px 15px; border-radius: 8px;"></div>
+            <div class="formula" style="font-size: 1.6rem;">
+                <div id="bot-frac1"></div>
+                <span>-</span>
+                <div id="bot-frac2"></div>
+                <span>=</span>
+                <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+                    <span style="font-size:0.85rem; font-weight:bold;" id="result-word">剩下</span>
+                    <div class="mixed-frac no-card" style="cursor: default; box-shadow:none; border:none; background:transparent; padding:5px; animation:none;">
+                        <input type="number" class="whole-input" id="ans-w" placeholder=" " min="0" oninput="autoCheck()">
+                        <div class="frac">
+                            <input type="number" class="frac-input" id="ans-num" placeholder="?" min="0" oninput="autoCheck()">
+                            <div class="frac-line" style="background: #ccc;"></div>
+                            <input type="number" class="frac-input" id="ans-den" placeholder="?" min="1" oninput="autoCheck()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="feedback" class="feedback-msg"></div>
+        </div>
+    </div>
+</div>
+
+<script src="js/FractionApp48_v2.js"></script>
+</body>
+</html>

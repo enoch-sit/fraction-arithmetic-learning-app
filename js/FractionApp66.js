@@ -72,8 +72,8 @@ function updateUI() {
 
     let numStr = document.getElementById('inputNum').value;
     let num = parseInt(numStr);
-    if (num <= 0) { num = 1; document.getElementById('inputNum').value = 1; }
-    else if (isNaN(num)) { num = 1; } 
+    if (isNaN(num)) { num = 0; document.getElementById('inputNum').value = 0; }
+    else if (num < 0) { num = 0; document.getElementById('inputNum').value = 0; }
     else if (num > 100) { num = 100; document.getElementById('inputNum').value = 100; }
 
     let denStr = document.getElementById('inputDen').value;
@@ -95,7 +95,8 @@ function updateUI() {
     const barHeight = parseInt(document.getElementById('heightSlider').value);
     FIXED_UNIT_WIDTH = parseInt(document.getElementById('widthSlider').value) || 150;
 
-    renderBars(actualW, actualN, den, barHeight);
+    const isIntegerDisplay = (document.getElementById('fractionPart').style.display === 'none');
+    renderBars(actualW, actualN, den, barHeight, isIntegerDisplay);
     renderText(actualW, actualN, den);
 }
 
@@ -128,15 +129,17 @@ function handleCellClick(clickedTotalCells, d) {
     updateUI();
 }
 
-function renderBars(w, n, d, height) {
+function renderBars(w, n, d, height, isIntegerDisplay) {
     const container = document.getElementById('barsDisplay');
     container.innerHTML = '';
 
     let displayD = d;
     let totalFilledCells = (w * d) + n;
 
-    // Integer mode: no grid lines, each unit = 1 whole
-    if (n === 0) {
+    // Integer mode: no grid lines, each unit = 1 whole.
+    // Driven by the mode (fraction part hidden), NOT by n === 0,
+    // so a fraction/mixed value with numerator 0 keeps its grid.
+    if (isIntegerDisplay) {
         displayD = 1;
         totalFilledCells = w;
     }

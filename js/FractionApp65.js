@@ -23,12 +23,12 @@ function toggleMode() {
     currentMode = currentMode === 1 ? 2 : 1;
     const btn = document.getElementById('toggleModeBtn');
     if (currentMode === 1) {
-        btn.innerText = '切換至模式 2 (顯示所有排列)';
+        btn.innerText = '顯示全部';
         btn.style.borderColor = '';
         btn.style.color = '';
         btn.style.boxShadow = '';
     } else {
-        btn.innerText = '切換至模式 1 (探索模式)';
+        btn.innerText = '逐一顯示';
         btn.style.borderColor = '#e67e22';
         btn.style.color = '#e67e22';
         btn.style.boxShadow = '0 3px 0 #e67e22';
@@ -151,7 +151,7 @@ function renderAllArrangements() {
 }
 
 function setDynamicSize(rows, cols) {
-    const containerW = window.innerWidth * 0.85; 
+    const containerW = circleContainer.clientWidth || Math.min(window.innerWidth * 0.85, 940);
     const containerH = window.innerHeight * 0.55; 
 
     const maxW = containerW / (1.25 * cols - 0.25);

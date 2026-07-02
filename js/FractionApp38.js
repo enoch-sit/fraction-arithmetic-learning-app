@@ -20,11 +20,11 @@ let currentSpeed = 1.0;
 let isCommonDenomReady = false; 
 
 const wordProblemTemplates = [
-    "有 [FRAC1] 公升的果汁，每 [FRAC2] 公升倒成一杯，可以倒滿幾杯？",
-    "一條長 [FRAC1] 公尺的緞帶，每 [FRAC2] 公尺剪成一段，共可剪成多少段？",
-    "農場有 [FRAC1] 公斤的飼料，小動物每天固定吃掉 [FRAC2] 公斤，這些飼料可以吃幾天？",
-    "廚師烤了 [FRAC1] 塊大披薩，每人分 [FRAC2] 塊，可以分給多少人？",
-    "水桶裡有 [FRAC1] 加侖的水，每次舀出 [FRAC2] 加侖，一共可以舀幾次？"
+    "有 [FRAC1] 公升果汁，每杯 [FRAC2] 公升，可以倒幾杯？",
+    "有 [FRAC1] 公尺緞帶，每段 [FRAC2] 公尺，可以剪幾段？",
+    "有 [FRAC1] 公斤飼料，每天吃 [FRAC2] 公斤，可以吃幾天？",
+    "有 [FRAC1] 塊披薩，每人 [FRAC2] 塊，可以分給幾人？",
+    "有 [FRAC1] 加侖水，每次舀 [FRAC2] 加侖，可以舀幾次？"
 ];
 
 function toggleWholeNumber() {
@@ -148,7 +148,7 @@ function applyTool(num, action) {
 
     if (changed) {
         renderBar(num, action, old_s);
-        setTimeout(checkCommonDenom, 650 / currentSpeed);
+        setTimeout(checkCommonDenom, 1250 / currentSpeed);
     }
 }
 
@@ -333,16 +333,18 @@ function checkCommonDenom() {
     setTimeout(() => { document.getElementById('bottom-answer-zone').style.display = 'none'; }, 300);
 
     if (isCommonDenomReady) {
-        // 通分成功：隱藏擴約分按鈕與數線
+        // 通分成功：隱藏擴約分按鈕
         document.querySelectorAll('.tool-btn').forEach(btn => btn.style.display = 'none');
-        let nl1 = document.getElementById('bar1-nl'); if(nl1) nl1.style.display = 'none';
-        let nl2 = document.getElementById('bar2-nl'); if(nl2) nl2.style.display = 'none';
+        // 鎖定數線開關，避免量測階段切換時重建長條圖而清除拖拉色塊與模具
         document.getElementById('show-nl-cb').disabled = true;
+        // 通分成功後，隱藏除數（藍色長條圖）原本的數線
+        let nl2 = document.getElementById('bar2-nl');
+        if (nl2) { nl2.style.display = 'none'; nl2.innerHTML = ''; }
 
-        document.getElementById('drag-instruction').innerHTML = `💡 成功通分！即將開始除法演示...`;
+        document.getElementById('drag-instruction').innerHTML = `💡 分母相同了，開始做除法`;
         
-        // 啟動除法動畫序列
-        startDivisionAnimation(cd1);
+        // 啟動除法動畫序列（通分成功後先暫停，讓學生閱讀）
+        setTimeout(() => startDivisionAnimation(cd1), 1800 / currentSpeed);
     } else {
         // 尚未通分：恢復顯示工具
         document.querySelectorAll('.tool-btn').forEach(btn => btn.style.display = 'flex');
@@ -351,7 +353,7 @@ function checkCommonDenom() {
             let nl1 = document.getElementById('bar1-nl'); if(nl1) nl1.style.display = 'flex';
             let nl2 = document.getElementById('bar2-nl'); if(nl2) nl2.style.display = 'flex';
         }
-        document.getElementById('drag-instruction').innerHTML = `💡 試著點擊「擴/約分」讓兩個分數的分母相同！`;
+        document.getElementById('drag-instruction').innerHTML = `💡 用「擴分／約分」讓兩邊分母相同`;
         document.getElementById('bar3-row').style.display = 'none';
     }
 }
@@ -370,6 +372,8 @@ function startDivisionAnimation(cd) {
 
     let lbl1 = document.getElementById('label1');
     let lbl2 = document.getElementById('label2');
+    lbl1.style.transition = 'opacity 0.5s';
+    lbl2.style.transition = 'opacity 0.5s';
     lbl1.style.opacity = "0";
     lbl2.style.opacity = "0";
 
@@ -378,10 +382,10 @@ function startDivisionAnimation(cd) {
         buildDivisorMold(wrap2, P2, cd);
 
         setTimeout(() => {
-            // 第三步：手動拖拉裝滿模具
+            // 第三步：手動拖拉裝滿模具（留足時間閱讀「除數容器」說明）
             setupManualDragAndFill(P1, P2, cd);
-        }, 1000);
-    }, 800);
+        }, 4800 / currentSpeed);
+    }, 1800 / currentSpeed);
 }
 
 // 第二步：建立封閉的除數模具
@@ -390,7 +394,7 @@ function buildDivisorMold(wrap, P2, cd) {
     let singleUnitPct = 100 / maxW;
     let totalPct = (P2 / cd) * singleUnitPct;
 
-    let moldHtml = `<div id="divisor-mold" style="position:relative; width:${totalPct}%; height:50px; border:3px solid var(--blue); background:var(--blue); opacity:0.85; box-sizing:border-box; border-radius:4px; display:flex; transition: 0.3s box-shadow;">`;
+    let moldHtml = `<div id="divisor-mold" style="position:relative; width:${totalPct}%; height:50px; border:3px dashed var(--blue); background:rgba(52, 152, 219, 0.25); opacity:1; box-sizing:border-box; border-radius:4px; display:flex; transition: 0.3s box-shadow;">`;
     for(let i = 1; i < P2; i++) {
         moldHtml += `<div style="position:absolute; top:0; left:${(i/P2)*100}%; width:1px; height:100%; background:var(--dark);"></div>`;
     }
@@ -401,6 +405,10 @@ function buildDivisorMold(wrap, P2, cd) {
     let mold = document.getElementById('divisor-mold');
     setTimeout(() => mold.style.boxShadow = "0 0 15px 5px rgba(52, 152, 219, 0.6)", 100);
     setTimeout(() => mold.style.boxShadow = "none", 600);
+
+    setTimeout(() => {
+        document.getElementById('drag-instruction').innerHTML = `💡 藍色長條是一個容器`;
+    }, 300 / currentSpeed);
 }
 
 // 第三步：設定手動拖拉裝滿模具 (每次一整份)
@@ -421,7 +429,7 @@ function setupManualDragAndFill(P1, P2, cd) {
     let wrap2 = document.getElementById('bar2-wrap');
     wrap2.classList.add('droppable-area'); // 將除數長條圖設為接收區
 
-    document.getElementById('label3').innerHTML = `除法結果<span style="font-size:0.8rem; color:var(--dark); margin-top:5px;">(已量測的數量)</span>`;
+    document.getElementById('label3').innerHTML = `除法結果`;
     document.getElementById('label3').style.opacity = '1';
 
     let wrap1 = document.getElementById('bar1-wrap');
@@ -455,6 +463,7 @@ function setupManualDragAndFill(P1, P2, cd) {
             line.style.zIndex = '5';
             mold.appendChild(line);
         }
+
         wrap3.appendChild(mold);
         molds.push(mold);
     }
@@ -514,7 +523,7 @@ function setupManualDragAndFill(P1, P2, cd) {
         overlay.appendChild(chunk);
     }
 
-    document.getElementById('drag-instruction').innerHTML = `💡 請將上方紅色的「被除數」色塊，每次拖拉（或點擊）「一整份」到第二列的「除數」圖形中來測量！`;
+    document.getElementById('drag-instruction').innerHTML = `💡 把紅色一份一份拖進藍色容器`;
 
     // 將拖放接收事件移至 wrap2 (除數圖形)
     wrap2.ondragover = (e) => {
@@ -571,8 +580,9 @@ function handleDropChunk(chunkId, molds, P1, P2, cd) {
     animBlock.style.borderRadius = '4px';
     animBlock.style.boxSizing = 'border-box';
     animBlock.style.zIndex = '9999';
-    // 設定 2 秒平滑過渡
-    animBlock.style.transition = 'top 2s ease-in-out, left 2s ease-in-out';
+    // 設定平滑過渡（飛行時間隨「動畫速度」滑桿調整）
+    let flightSec = 2 / currentSpeed;
+    animBlock.style.transition = `top ${flightSec}s ease-in-out, left ${flightSec}s ease-in-out`;
     
     document.body.appendChild(animBlock);
 
@@ -586,7 +596,6 @@ function handleDropChunk(chunkId, molds, P1, P2, cd) {
     // 動畫結束後的處理
     setTimeout(() => {
         animBlock.remove();
-
         // 在結果區模具中生成顏色填充
         let fill = document.createElement('div');
         fill.style.position = 'absolute';
@@ -610,7 +619,7 @@ function handleDropChunk(chunkId, molds, P1, P2, cd) {
             wrap3.style.backgroundColor = 'transparent';
             showAnswerZone(P1, P2, cd);
         }
-    }, 2000);
+    }, flightSec * 1000);
 }
 
 function showAnswerZone(P1, P2, cd) {
@@ -627,7 +636,7 @@ function showAnswerZone(P1, P2, cd) {
     let hint = "";
     if (exactN >= exactD) {
         document.getElementById('ans-w').style.display = 'inline-block';
-        hint = " (可填帶分數或假分數)";
+        hint = "（可填帶分數）";
     } else {
         document.getElementById('ans-w').style.display = 'none';
         document.getElementById('ans-w').value = '';
@@ -635,7 +644,7 @@ function showAnswerZone(P1, P2, cd) {
 
     // 確保移除不必要的提示字句
     document.getElementById('bot-public-unit').style.display = 'none';
-    document.getElementById('drag-instruction').innerHTML = `💡 太棒了！全部量測完成。可以看出總共裝滿了幾「份」嗎？請填寫下方最終答案！${hint}`;
+    document.getElementById('drag-instruction').innerHTML = `💡 數完了，請填寫下方答案${hint}`;
 }
 
 function updateUI() {
@@ -703,7 +712,7 @@ function updateUI() {
     
     renderBar(1, 'none');
     renderBar(2, 'none');
-    document.getElementById('drag-instruction').innerHTML = `💡 點擊上方分數，顯示長條圖！`;
+    document.getElementById('drag-instruction').innerHTML = `💡 點上方的分數，顯示長條圖`;
 }
 
 function randomChallenge() {
@@ -780,20 +789,20 @@ function autoCheck() {
             if (ansN === 0 && ansW === simpleW && simpleMixedN === 0) isSimplest = true;
 
             if (isSimplest) {
-                msg = '🎉 完全正確！這就是最終答案！';
+                msg = '🎉 完全正確！';
             } else {
-                msg = '🌟 答對了數值！試試看，這個答案可以再「約分」或「轉成帶分數」喔！';
+                msg = '🌟 數值對了，可以再約分或寫成帶分數';
             }
             
             if (currentD !== LcmD) {
-                msg += '<br><span style="color:var(--orange); font-size:1rem; font-weight:normal;">（提示：你通分時使用的分母不是最小公倍數喔！雖然算得對，但數字比較大會比較辛苦。）</span>';
+                msg += '<br><span style="color:var(--orange); font-size:1rem; font-weight:normal;">（提示：通分時分母不是最小公倍數）</span>';
             }
 
             fb.style.opacity = '1'; fb.style.color = 'var(--success)'; 
             fb.innerHTML = msg;
         } else { 
             fb.style.opacity = '1'; fb.style.color = 'var(--red)'; 
-            fb.innerText = '👀 答案不對喔，再觀察一下總共裝滿了幾個模具？剩下不滿的佔幾個格子？'; 
+            fb.innerText = '👀 答案不對，再數一次裝了幾個容器'; 
         }
     } else { fb.style.opacity = '0'; }
 }

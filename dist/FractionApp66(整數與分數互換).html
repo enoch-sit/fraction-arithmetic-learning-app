@@ -205,7 +205,9 @@ body {
 }
 
 .app-container {
-    width: 900px;
+    max-width: 1000px;
+    width: 100%;
+    box-sizing: border-box;
     background: white;
     border-radius: 20px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
@@ -718,7 +720,7 @@ input[type="number"] {
             <div class="fraction-ui" id="inputArea">
                 <input type="number" id="inputWhole" value="1" min="0" max="100">
                 <div class="fraction-input-stack" id="fractionPart" style="display:inline-flex; flex-direction: column; align-items: center;">
-                    <input type="number" id="inputNum" value="1" min="1" max="100">
+                    <input type="number" id="inputNum" value="1" min="0" max="100">
                     <div class="f-line"></div>
                     <input type="number" id="inputDen" value="3" min="1" max="100">
                 </div>
@@ -823,8 +825,8 @@ function updateUI() {
 
     let numStr = document.getElementById('inputNum').value;
     let num = parseInt(numStr);
-    if (num <= 0) { num = 1; document.getElementById('inputNum').value = 1; }
-    else if (isNaN(num)) { num = 1; } 
+    if (isNaN(num)) { num = 0; document.getElementById('inputNum').value = 0; }
+    else if (num < 0) { num = 0; document.getElementById('inputNum').value = 0; }
     else if (num > 100) { num = 100; document.getElementById('inputNum').value = 100; }
 
     let denStr = document.getElementById('inputDen').value;
@@ -846,7 +848,8 @@ function updateUI() {
     const barHeight = parseInt(document.getElementById('heightSlider').value);
     FIXED_UNIT_WIDTH = parseInt(document.getElementById('widthSlider').value) || 150;
 
-    renderBars(actualW, actualN, den, barHeight);
+    const isIntegerDisplay = (document.getElementById('fractionPart').style.display === 'none');
+    renderBars(actualW, actualN, den, barHeight, isIntegerDisplay);
     renderText(actualW, actualN, den);
 }
 
@@ -879,15 +882,17 @@ function handleCellClick(clickedTotalCells, d) {
     updateUI();
 }
 
-function renderBars(w, n, d, height) {
+function renderBars(w, n, d, height, isIntegerDisplay) {
     const container = document.getElementById('barsDisplay');
     container.innerHTML = '';
 
     let displayD = d;
     let totalFilledCells = (w * d) + n;
 
-    // Integer mode: no grid lines, each unit = 1 whole
-    if (n === 0) {
+    // Integer mode: no grid lines, each unit = 1 whole.
+    // Driven by the mode (fraction part hidden), NOT by n === 0,
+    // so a fraction/mixed value with numerator 0 keeps its grid.
+    if (isIntegerDisplay) {
         displayD = 1;
         totalFilledCells = w;
     }

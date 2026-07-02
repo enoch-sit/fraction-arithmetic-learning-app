@@ -16,6 +16,7 @@ let currentSpeed = 1.0;
 let isRearranged = false; 
 let isAnimating = false;
 let isRearranging = false;
+let awaitingRearrangeClick = false;
 let animBlocks = []; 
 let preRearrangePositions = [];
 let currentNL_D = 1; 
@@ -179,6 +180,23 @@ function updateUI() {
         wpEl.innerHTML = currentWordProblemTemplate.replace(/\[FRAC1\]/g, frac1Html).replace(/\[FRAC2\]/g, frac2Html);
         wpEl.style.display = 'block';
     }
+
+    isPhase1OrLater = false;
+    awaitingRearrangeClick = false;
+    currentTutorialStep = 0;
+    isAnimating = false;
+    isRearranged = false;
+    hideFinger();
+    clearTimeout(idleTimer);
+
+    document.getElementById('bar1-row').style.display = 'none';
+    let wrap = document.getElementById('main-bar-wrap');
+    wrap.innerHTML = '';
+    wrap.style.cursor = 'default';
+    wrap.title = '';
+    document.getElementById('bottom-answer-zone').style.display = 'none';
+    document.getElementById('bottom-answer-zone').style.opacity = '0';
+    document.getElementById('drag-instruction').innerHTML = `💡 準備中...請先點擊上方的「被乘數」`;
 }
 
 function getFracHtml(n, d, color = "inherit") {
@@ -290,12 +308,146 @@ function onFrac1Click() {
     currentNL_D = B;
     toggleNumberLine();
     
-    document.getElementById('drag-instruction').innerHTML = `👉 點擊 × ${getDisplayHtml(vals.w2, vals.n2, vals.d2, 'var(--blue)')}`;
+    document.getElementById('drag-instruction').innerHTML =
+        `<span style="display:inline-block; background:var(--success); color:#fff; border-radius:12px; padding:2px 10px; font-size:0.95rem; margin-right:8px; vertical-align:middle;">步驟 1 / 5</span>` +
+        `<span style="vertical-align:middle;">已顯示被乘數（紅）的長條圖。👉 點擊 × ${getDisplayHtml(vals.w2, vals.n2, vals.d2, 'var(--blue)')} 繼續</span>`;
     document.getElementById('bottom-answer-zone').style.display = 'none';
     document.getElementById('bottom-answer-zone').style.opacity = '0';
 }
 
-function onFrac2Click() {
+// --- 動畫輔助函數 ---
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function setAnimStep(num, text) {
+    let el = document.getElementById('drag-instruction');
+    if (!el) return;
+    el.innerHTML = `<span style="display:inline-block; background:var(--blue); color:#fff; border-radius:12px; padding:2px 10px; font-size:0.95rem; margin-right:8px; vertical-align:middle;">步驟 ${num} / 5</span><span style="color:var(--dark); font-weight:bold; vertical-align:middle;">${text}</span>`;
+}
+
+function makeGhost(rect) {
+    let ghost = document.createElement('div');
+    ghost.style.position = 'fixed';
+    ghost.style.left = `${rect.left}px`;
+    ghost.style.top = `${rect.top}px`;
+    ghost.style.width = `${rect.width}px`;
+    ghost.style.height = `${rect.height}px`;
+    ghost.style.backgroundColor = 'var(--red)';
+    ghost.style.opacity = '0.85';
+    ghost.style.transition = 'all 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+    ghost.style.zIndex = '100';
+    ghost.style.pointerEvents = 'none';
+    return ghost;
+}
+
+// 第 2 步：依乘數分母把每一格再平均切分（虛線由上往下生長）
+function animateSubdivide(dashedLines, duration) {
+    return new Promise(resolve => {
+        let start = performance.now();
+        function loop(now) {
+            let p = Math.min((now - start) / duration, 1);
+            dashedLines.forEach(l => l.style.height = `${p * 100}%`);
+            if (p < 1) requestAnimationFrame(loop); else resolve();
+        }
+        requestAnimationFrame(loop);
+    });
+}
+
+// 第 3 步：依乘數分子提取比例（保留要取的格子，其餘淡出；超過 1 倍時補上新格子）
+function animateExtract(duration) {
+    return new Promise(resolve => {
+        let start = performance.now();
+        function loop(now) {
+            let p = Math.min((now - start) / duration, 1);
+            animBlocks.forEach(b => {
+                if (b.state === 'discarded') b.el.style.opacity = `${0.85 * (1 - p)}`;
+                else if (b.state === 'added') b.el.style.opacity = `${0.85 * p}`;
+                else b.el.style.opacity = '0.85';
+            });
+            if (p < 1) requestAnimationFrame(loop); else resolve();
+        }
+        requestAnimationFrame(loop);
+    });
+}
+
+// 第 4 步：把提取出的格子依序移動、整齊排列（向前）
+function rearrangeForward() {
+    return new Promise(resolve => {
+        const vals = getSafeValues();
+        let slotsPerUnit = vals.d1 * vals.d2;
+        preRearrangePositions = [];
+        let ghosts = [];
+
+        animBlocks.forEach((b) => {
+            let rect = b.el.getBoundingClientRect();
+            preRearrangePositions.push({ left: b.el.style.left, unit: b.el.parentElement });
+            let ghost = makeGhost(rect);
+            document.body.appendChild(ghost);
+            ghosts.push(ghost);
+            b.el.style.visibility = 'hidden';
+        });
+
+        setTimeout(() => {
+            ghosts.forEach((ghost, i) => {
+                let unitIdx = Math.floor(i / slotsPerUnit);
+                let rem = i % slotsPerUnit;
+                let targetUnit = document.getElementById(`unit-${unitIdx}`);
+                let tRect = targetUnit.getBoundingClientRect();
+                let targetLeft = tRect.left + (rem * (tRect.width / slotsPerUnit));
+                ghost.style.left = `${targetLeft}px`;
+                ghost.style.top = `${tRect.top}px`;
+            });
+        }, 50);
+
+        setTimeout(() => {
+            animBlocks.forEach((b, i) => {
+                let unitIdx = Math.floor(i / slotsPerUnit);
+                let rem = i % slotsPerUnit;
+                let targetUnit = document.getElementById(`unit-${unitIdx}`);
+                targetUnit.appendChild(b.el);
+                b.el.style.left = `${(rem / slotsPerUnit) * 100}%`;
+                b.el.style.visibility = 'visible';
+            });
+            ghosts.forEach(g => g.remove());
+            isRearranged = true;
+            resolve();
+        }, 650);
+    });
+}
+
+// 還原排列（向後）
+function rearrangeBackward() {
+    return new Promise(resolve => {
+        let ghosts = [];
+        animBlocks.forEach((b) => {
+            let rect = b.el.getBoundingClientRect();
+            let ghost = makeGhost(rect);
+            document.body.appendChild(ghost);
+            ghosts.push(ghost);
+            b.el.style.visibility = 'hidden';
+        });
+
+        setTimeout(() => {
+            ghosts.forEach((ghost, i) => {
+                let orig = preRearrangePositions[i];
+                orig.unit.appendChild(animBlocks[i].el);
+                animBlocks[i].el.style.left = orig.left;
+                let tRect = animBlocks[i].el.getBoundingClientRect();
+                ghost.style.left = `${tRect.left}px`;
+                ghost.style.top = `${tRect.top}px`;
+            });
+        }, 50);
+
+        setTimeout(() => {
+            animBlocks.forEach(b => b.el.style.visibility = 'visible');
+            ghosts.forEach(g => g.remove());
+            isRearranged = false;
+            resolve();
+        }, 650);
+    });
+}
+// ------------------------
+
+async function onFrac2Click() {
     if (isAnimating) return;
     let rowCheck = document.getElementById('bar1-row');
     if (rowCheck.style.display === 'none') {
@@ -321,8 +473,7 @@ function onFrac2Click() {
     let C = vals.total_n2, D = vals.d2;
     let maxW = updateMaxWholes();
     
-    document.getElementById('drag-instruction').innerHTML = 
-        `<span id="anim-step-text" style="color:var(--blue); font-weight:bold;">準備中...</span>`;
+    setAnimStep(2, '準備中...');
          
     let wrap = document.getElementById('main-bar-wrap');
     wrap.innerHTML = '';
@@ -388,51 +539,42 @@ function onFrac2Click() {
         wrap.appendChild(unit);
     }
     
-    let startTime = performance.now();
-    let totalDuration = 3500 / currentSpeed; 
-    
-    function loop(now) {
-        let t = now - startTime;
-        let p = t / totalDuration;
-        if (p > 1) p = 1;
-        
-        let stepText = "";
-        
-        if (p <= 0.5) {
-            stepText = "第 1 步：將被乘數進一步細分";
-            let h = (p / 0.5) * 100;
-            dashedLines.forEach(l => l.style.height = `${h}%`);
-            animBlocks.forEach(b => {
-                if (b.state === 'discarded' || b.state === 'kept') b.el.style.opacity = '0.85';
-                if (b.state === 'added') b.el.style.opacity = '0';
-            });
-        } else {
-            stepText = "第 2 步：保留結果，完成乘法";
-            dashedLines.forEach(l => l.style.height = `100%`);
-            
-            let fade_p = (p - 0.5) / 0.5;
-            animBlocks.forEach(b => {
-                if (b.state === 'discarded') b.el.style.opacity = `${0.85 * (1 - fade_p)}`;
-                if (b.state === 'added') b.el.style.opacity = `${0.85 * fade_p}`;
-                if (b.state === 'kept') b.el.style.opacity = '0.85';
-            });
-        }
-        
-        document.getElementById('anim-step-text').innerText = stepText;
-        
-        if (p < 1) {
-            requestAnimationFrame(loop);
-        } else {
-            finishAnimation();
-        }
+    // ===== 分步驟動畫 =====
+    // 第 2 步：引入乘數的分母，將每一格平均再切分
+    setAnimStep(2, `引入乘數的分母 <b style="color:var(--blue)">${D}</b>，把被乘數的每一格平均再切分成 <b>${D}</b> 份`);
+    await delay(500 / currentSpeed);
+    await animateSubdivide(dashedLines, 1300 / currentSpeed);
+    await delay(400 / currentSpeed);
+
+    // 第 3 步：依乘數的分子，從每一格提取指定比例
+    if (C <= D) {
+        setAnimStep(3, `依乘數的分子 <b style="color:var(--blue)">${C}</b>，從每 <b>${D}</b> 小格中提取 <b style="color:var(--red)">${C}</b> 格（其餘淡出）`);
+    } else {
+        setAnimStep(3, `乘數大於 1，補上不足的格子，共提取 <b style="color:var(--red)">${C}</b> 倍的份量`);
     }
-    
-    requestAnimationFrame(loop);
+    await animateExtract(1300 / currentSpeed);
+    await delay(300 / currentSpeed);
+
+    // 移除被捨棄的格子，只留下提取出來的紅色微細格子
+    animBlocks = animBlocks.filter(b => {
+        if (b.state === 'discarded') { b.el.remove(); return false; }
+        return true;
+    });
+
+    // 第 4 步：暫停，等待使用者點擊長條圖（手指提示）後才排列
+    isAnimating = false;
+    awaitingRearrangeClick = true;
+    currentTutorialStep = 2;
+    setAnimStep(4, `將提取出的紅色微細格子依序移動、整齊排列`);
+    wrap = document.getElementById('main-bar-wrap');
+    wrap.style.cursor = 'pointer';
+    wrap.title = '點擊方塊整齊排列';
+    pointAtTarget(wrap);
 }
 
 function finishAnimation() {
     isAnimating = false;
-    currentTutorialStep = 2; // 動畫結束，進入下一步驟：提示點擊長條圖
+    currentTutorialStep = 3; // 動畫結束，進入下一步驟：提示作答
     clearTimeout(idleTimer);
     idleTimer = setTimeout(showIdleHint, 3000);
 
@@ -440,12 +582,15 @@ function finishAnimation() {
     let nlCb = document.getElementById('show-nl-cb');
     if (nlCb) nlCb.disabled = false;
     
-    document.getElementById('drag-instruction').innerHTML = `💡 現在，根據最終顯示的紅色方塊填寫答案吧！（可點擊長條圖重新排列方塊）`;
-    
     const vals = getSafeValues();
     let A = vals.total_n1, B = vals.d1, C = vals.total_n2, D = vals.d2;
     let resultD = B * D;
     let resultN = A * C;
+    
+    // 第 5 步：數一數結果區的紅色微細格子，得出最終答案
+    document.getElementById('drag-instruction').innerHTML =
+        `<span style="display:inline-block; background:var(--success); color:#fff; border-radius:12px; padding:2px 10px; font-size:0.95rem; margin-right:8px; vertical-align:middle;">步驟 5 / 5</span>` +
+        `<span style="color:var(--dark); font-weight:bold; vertical-align:middle;">數一數！紅色微細格子共 <b style="color:var(--red)">${resultN}</b> 格（分子）；每個整體分成 <b style="color:var(--blue)">${resultD}</b> 格（分母）。請填寫答案，也可點擊長條圖切換排列。</span>`;
     
     document.getElementById('bottom-answer-zone').style.display = 'flex';
     setTimeout(() => document.getElementById('bottom-answer-zone').style.opacity = '1', 50);
@@ -466,21 +611,25 @@ function finishAnimation() {
     
     let wrap = document.getElementById('main-bar-wrap');
     wrap.style.cursor = 'pointer';
-    wrap.title = '點擊方塊重新排列';
-    isRearranged = false;
-    
-    animBlocks = animBlocks.filter(b => {
-        if (b.state === 'discarded') {
-            b.el.remove();
-            return false;
-        }
-        return true;
-    });
+    wrap.title = '點擊方塊切換排列';
+    // 動畫已自動整齊排列，故 isRearranged 維持 true（由 rearrangeForward 設定）
 }
 
 function toggleRearrange() {
+    if (awaitingRearrangeClick) {
+        awaitingRearrangeClick = false;
+        hideFinger();
+        isAnimating = true;
+        isRearranging = true;
+        rearrangeForward().then(() => {
+            isRearranging = false;
+            finishAnimation();
+        });
+        return;
+    }
+
     if (document.getElementById('bottom-answer-zone').style.display !== 'flex') return;
-    if (isRearranging) return;
+    if (isRearranging || isAnimating) return;
     
     isRearranging = true;
     
@@ -488,109 +637,8 @@ function toggleRearrange() {
         currentTutorialStep = 3; // 重新排列後，進入最後步驟：提示作答
     }
     
-    const vals = getSafeValues();
-    let B = vals.d1, D = vals.d2;
-    let slotsPerUnit = B * D;
-    
-    let wrap = document.getElementById('main-bar-wrap');
-    let wrapRect = wrap.getBoundingClientRect();
-    
-    if (!isRearranged) {
-        preRearrangePositions = [];
-        let ghosts = [];
-        
-        animBlocks.forEach((b) => {
-            let rect = b.el.getBoundingClientRect();
-            preRearrangePositions.push({ left: b.el.style.left, unit: b.el.parentElement });
-            
-            let ghost = document.createElement('div');
-            ghost.style.position = 'fixed';
-            ghost.style.left = `${rect.left}px`;
-            ghost.style.top = `${rect.top}px`;
-            ghost.style.width = `${rect.width}px`;
-            ghost.style.height = `${rect.height}px`;
-            ghost.style.backgroundColor = 'var(--red)';
-            ghost.style.opacity = '0.85';
-            ghost.style.transition = 'all 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
-            ghost.style.zIndex = '100';
-            ghost.style.pointerEvents = 'none';
-            document.body.appendChild(ghost);
-            ghosts.push(ghost);
-            
-            b.el.style.visibility = 'hidden'; 
-        });
-        
-        setTimeout(() => {
-            ghosts.forEach((ghost, i) => {
-                let unitIdx = Math.floor(i / slotsPerUnit);
-                let rem = i % slotsPerUnit;
-                let targetUnit = document.getElementById(`unit-${unitIdx}`);
-                let tRect = targetUnit.getBoundingClientRect();
-                
-                let targetLeft = tRect.left + (rem * (tRect.width / slotsPerUnit));
-                let targetTop = tRect.top;
-                
-                ghost.style.left = `${targetLeft}px`;
-                ghost.style.top = `${targetTop}px`;
-            });
-        }, 50);
-        
-        setTimeout(() => {
-            animBlocks.forEach((b, i) => {
-                let unitIdx = Math.floor(i / slotsPerUnit);
-                let rem = i % slotsPerUnit;
-                let targetUnit = document.getElementById(`unit-${unitIdx}`);
-                
-                targetUnit.appendChild(b.el);
-                b.el.style.left = `${(rem/slotsPerUnit)*100}%`;
-                b.el.style.visibility = 'visible';
-            });
-            
-            ghosts.forEach(g => g.remove());
-            isRearranged = true;
-            isRearranging = false;
-        }, 650);
-        
-    } else {
-        let ghosts = [];
-        animBlocks.forEach((b) => {
-            let rect = b.el.getBoundingClientRect();
-            let ghost = document.createElement('div');
-            ghost.style.position = 'fixed';
-            ghost.style.left = `${rect.left}px`;
-            ghost.style.top = `${rect.top}px`;
-            ghost.style.width = `${rect.width}px`;
-            ghost.style.height = `${rect.height}px`;
-            ghost.style.backgroundColor = 'var(--red)';
-            ghost.style.opacity = '0.85';
-            ghost.style.transition = 'all 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
-            ghost.style.zIndex = '100';
-            ghost.style.pointerEvents = 'none';
-            document.body.appendChild(ghost);
-            ghosts.push(ghost);
-            
-            b.el.style.visibility = 'hidden';
-        });
-        
-        setTimeout(() => {
-            ghosts.forEach((ghost, i) => {
-                let orig = preRearrangePositions[i];
-                orig.unit.appendChild(animBlocks[i].el);
-                animBlocks[i].el.style.left = orig.left;
-                
-                let tRect = animBlocks[i].el.getBoundingClientRect();
-                ghost.style.left = `${tRect.left}px`;
-                ghost.style.top = `${tRect.top}px`;
-            });
-        }, 50);
-        
-        setTimeout(() => {
-            animBlocks.forEach(b => b.el.style.visibility = 'visible');
-            ghosts.forEach(g => g.remove());
-            isRearranged = false;
-            isRearranging = false;
-        }, 650);
-    }
+    let action = isRearranged ? rearrangeBackward() : rearrangeForward();
+    action.then(() => { isRearranging = false; });
 }
 
 function autoCheck() {
@@ -640,6 +688,8 @@ function autoCheck() {
 function randomChallenge() {
     if (isAnimating) return;
     isPhase1OrLater = false; 
+    awaitingRearrangeClick = false;
+    isRearranged = false;
     
     currentTutorialStep = 0; // 重置提示步驟
     hideFinger();

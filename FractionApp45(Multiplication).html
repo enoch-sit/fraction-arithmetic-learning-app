@@ -43,20 +43,20 @@
     <div class="answer-zone">
         <div class="formula">
             <div class="mixed-frac" id="frac1-group" onclick="onFrac1Click()" title="點擊設定被乘數圖形">
-                <input type="number" class="whole-input" id="w1" placeholder=" " min="0" max="10" onchange="updateUI()">
+                <input type="number" class="whole-input" id="w1" placeholder=" " min="0" max="10" oninput="updateUI()" onchange="updateUI()">
                 <div class="frac">
-                    <input type="number" class="frac-input" id="n1" value="2" min="1" max="10" onchange="updateUI()">
+                    <input type="number" class="frac-input" id="n1" value="2" min="1" max="10" oninput="updateUI()" onchange="updateUI()">
                     <div class="frac-line"></div>
-                    <input type="number" class="frac-input" id="d1" value="3" min="1" max="10" onchange="updateUI()">
+                    <input type="number" class="frac-input" id="d1" value="3" min="1" max="10" oninput="updateUI()" onchange="updateUI()">
                 </div>
             </div>
             <span style="cursor:pointer;" onclick="onFrac2Click()" title="點擊播放乘法動畫">×</span>
             <div class="mixed-frac" id="frac2-group" onclick="onFrac2Click()" title="點擊播放乘法動畫">
-                <input type="number" class="whole-input" id="w2" placeholder=" " min="0" max="10" onchange="updateUI()">
+                <input type="number" class="whole-input" id="w2" placeholder=" " min="0" max="10" oninput="updateUI()" onchange="updateUI()">
                 <div class="frac">
-                    <input type="number" class="frac-input" id="n2" value="1" min="1" max="10" onchange="updateUI()">
+                    <input type="number" class="frac-input" id="n2" value="1" min="1" max="10" oninput="updateUI()" onchange="updateUI()">
                     <div class="frac-line"></div>
-                    <input type="number" class="frac-input" id="d2" value="2" min="1" max="10" onchange="updateUI()">
+                    <input type="number" class="frac-input" id="d2" value="2" min="1" max="10" oninput="updateUI()" onchange="updateUI()">
                 </div>
             </div>
         </div>

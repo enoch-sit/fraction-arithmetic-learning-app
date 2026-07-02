@@ -29,7 +29,7 @@
                 <span class="divider"></span>
                 <div class="speed-ctrl">
                     <label for="speed-slider" title="調整擴分/約分的動畫速度">動畫速度: <span id="speed-val" style="color: var(--blue);">1.0</span>x</label>
-                    <input type="range" id="speed-slider" min="0.5" max="3" step="0.1" value="1.0" oninput="updateSpeed()">
+                    <input type="range" id="speed-slider" min="0.25" max="3" step="0.05" value="1.0" oninput="updateSpeed()">
                 </div>
             </div>
             <button class="lang-btn btn-random" onclick="randomChallenge()">🎲 隨機出題</button>
@@ -48,7 +48,7 @@
                     <input type="number" class="frac-input" id="d1" value="3" min="1" max="100" oninput="updateUI()" onchange="updateUI()">
                 </div>
             </div>
-            <span>÷</span>
+            <span class="reset-op" onclick="updateUI()" title="點擊重置動畫" style="cursor:pointer;">÷</span>
             <div class="mixed-frac" id="frac2-group" onclick="onFrac2Click()" title="點擊重置並顯示除數圖形">
                 <input type="number" class="whole-input" id="w2" placeholder=" " min="0" max="10" oninput="updateUI()" onchange="updateUI()">
                 <div class="frac">
@@ -61,7 +61,7 @@
     </div>
 
     <div class="animation-zone" id="anim-zone">
-        <div id="drag-instruction" class="instruction-text">💡 準備中...</div>
+        <div id="drag-instruction" class="instruction-text">💡 點上方的分數，顯示長條圖</div>
         <div id="anim-area"></div>
 
         <div id="bottom-answer-zone">
@@ -84,6 +84,17 @@
             <div id="feedback" class="feedback-msg"></div>
         </div>
     </div>
+
+    <!-- <div class="explain-panel">
+        <div class="explain-title">📖 分數除法動畫解釋</div>
+        <ol class="explain-steps">
+            <li><b>通分母</b>後，<span class="hl-red">被除數（紅）</span>和<span class="hl-blue">除數（藍）</span>的長條圖，每一格都是<b>均等</b>的。</li>
+            <li><span class="hl-blue">除數（藍）</span>長條圖會形成一個固定的「<b>除數容器</b>」，若填滿此容器則代表「<b>1 整份</b>」。</li>
+            <li><span class="hl-red">被除數（紅）</span>長條圖會依據「<b>除數容器</b>」的大小<b>重新排列</b>。</li>
+            <li>將重新排列的<span class="hl-red">被除數（紅）</span>長條圖拖到「<b>除數容器</b>」中：若填滿一個「除數容器」則代表 <b>1 整份</b>。</li>
+            <li>在<b>結果區</b>計算一共填滿了多少個「除數容器」及未填滿的「除數容器」，並得出<b>最終答案</b>。</li>
+        </ol>
+    </div> -->
 </div>
 
 <script src="js/FractionApp38.js"></script>

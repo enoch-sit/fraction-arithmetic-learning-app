@@ -277,7 +277,7 @@
 :root { --primary: #3498db; --accent: #8e44ad; --success: #27ae60; --red: #e74c3c; --gray: #95a5a6; --grid-dark: #333; --yellow: #eeb015; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'PingFang HK', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif; background: linear-gradient(135deg, #e0f7fa 0%, #fff9c4 100%); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-.container { background: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); max-width: 850px; width: 100%; }
+.container { background: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); max-width: 1000px; width: 100%; }
 
 /* Nav bar styles now in nav.css */
 #speed_slider { width: 80px; cursor: pointer; accent-color: var(--primary); }
@@ -325,18 +325,52 @@ body { font-family: 'PingFang HK', 'Microsoft JhengHei', 'Noto Sans TC', sans-se
 .visual-stack { width: 100%; display: flex; flex-direction: column; gap: 20px; margin-bottom: 20px; }
 .bar-label { font-weight: bold; margin-bottom: 5px; font-size: 1.1rem; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
 /* 移除 overflow: hidden 讓長度可以動態調整 */
-.bar-container { height: 70px; background: #eee; border-radius: 12px; position: relative; border: 2px solid var(--grid-dark); transition: width 0.3s ease, border-color 0.3s, box-shadow 0.3s, filter 0.3s; }
+.bar-container { height: 70px; background: #eee; border-radius: 12px; position: relative; border: 2px solid var(--grid-dark); transition: width var(--bar-anim-duration, 0.3s) ease, border-color 0.3s, box-shadow 0.3s, filter 0.3s; }
 
-.bar-fill { height: 100%; transition: width 0.4s ease; position: absolute; z-index: 1; opacity: 0.8; pointer-events: none; border-radius: 10px; }
+.bar-fill { height: 100%; transition: width var(--bar-anim-duration, 0.4s) ease; position: absolute; z-index: 1; opacity: 0.8; pointer-events: none; border-radius: 10px; }
 
 .grid-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; z-index: 2; pointer-events: none; border-radius: 10px; overflow: hidden; }
 .segment { flex: 1; }
 .divider-thick { flex: 0 0 3px; background: var(--grid-dark); z-index: 3; }
-.divider-thin { flex: 0 0 1px; position: relative; z-index: 3; }
-.divider-thin .anim-line { position: absolute; top: 0; left: 0; width: 100%; transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s; }
+.divider-thin { flex: 0 0 1px; position: relative; z-index: 3; background: transparent; }
+.divider-anim-slot { flex: 0 0 1px; position: relative; z-index: 3; background: transparent; }
+.divider-thin .anim-line,
+.divider-anim-slot .anim-line { position: absolute; top: 0; left: 0; width: 100%; background: var(--grid-dark); }
+.divider-thin .anim-line.anim-line-dashed,
+.divider-anim-slot .anim-line.anim-line-dashed {
+    left: 50%;
+    width: 0;
+    transform: translateX(-50%);
+    border-left: 2px dashed var(--grid-dark);
+    background: transparent;
+}
+
+/* 約分動畫 — 同 FractionApp47 applyGridAnimation simplify 分支 */
+.simplify-anim-overlay {
+    display: block;
+}
+.simplify-anim-overlay .simplify-abs-thick,
+.simplify-anim-overlay .simplify-removed-line,
+.simplify-anim-overlay .simplify-retained-line {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+}
+.simplify-anim-overlay .simplify-abs-thick {
+    width: 3px;
+    height: 100%;
+    background: var(--grid-dark);
+    z-index: 4;
+}
+.simplify-anim-overlay .simplify-removed-line,
+.simplify-anim-overlay .simplify-retained-line {
+    width: 1px;
+    background: var(--grid-dark);
+    z-index: 3;
+}
 
 /* 數線樣式 — 視覺樣式已移至 number-line.css；此處只留各 app 專屬行為 */
-.number-line-wrapper { padding: 0 2px; margin-top: 5px; transition: width 0.3s ease, opacity 0.3s ease; }
+.number-line-wrapper { padding: 0 2px; margin-top: 5px; transition: width var(--bar-anim-duration, 0.3s) ease; }
 
 .question-banner { display: none; background: #e3f2fd; border-radius: 14px; padding: 14px 20px; margin-bottom: 20px; text-align: center; border: 2px solid #bbdefb; }
 .question-banner.show { display: block; }
@@ -567,7 +601,7 @@ body.embedded .container { box-shadow: none; border-radius: 0; padding: 1rem; }
 <div class="container">
     <div class="header">
         <div class="header-left">
-            <button id="btn_toggle_sync" class="lang-btn btn-active-mode" onclick="toggleSyncMode()">模式1</button>
+            <button id="btn_toggle_sync" class="lang-btn btn-active-mode" onclick="toggleSyncMode()">同步分子分母</button>
             <div class="title-badge" id="title_text">相等分數</div>
         </div>
         <div class="header-right">
@@ -700,28 +734,62 @@ body.embedded .container { box-shadow: none; border-radius: 0; padding: 1rem; }
 
 /* ===== next inline <script> block ===== */
 
-const isAnim = true;
 const LIMITS = { den_start: 100, expand_factor: 20 };
 let currentOp = '*'; 
 let showNumberLine = true;
 let isSyncMode = true; // 預設為模式1
+let drawProcessGeneration = 0;
+let drawProcessAnimTimeout = null;
+let drawProcessBgTimeouts = [];
+let prevFdVal = 1;
+let prevFnVal = 1;
 
 let targetNum = null;  
 let targetDen = null;  
+
+function getAnimTiming(fnVal, fdVal) {
+    let maxFactor = Math.max(fnVal, fdVal);
+    let baseAnimDuration = 1.3;
+    let baseBgTimeout = 1250;
+    if (maxFactor > 3) {
+        baseAnimDuration = 1.0;
+        baseBgTimeout = 950;
+    }
+    const speedVal = parseFloat(document.getElementById('speed_slider').value);
+    const animDurationSec = baseAnimDuration / speedVal;
+    return {
+        animDuration: animDurationSec + 's',
+        animDurationMs: animDurationSec * 1000,
+        bgTimeout: baseBgTimeout / speedVal
+    };
+}
+
+function applyBarAnimDuration(animDuration) {
+    document.documentElement.style.setProperty('--bar-anim-duration', animDuration);
+}
+
+function clearDrawProcessTimeouts() {
+    if (drawProcessAnimTimeout) {
+        clearTimeout(drawProcessAnimTimeout);
+        drawProcessAnimTimeout = null;
+    }
+    drawProcessBgTimeouts.forEach(id => clearTimeout(id));
+    drawProcessBgTimeouts = [];
+}
 
 function toggleSyncMode() {
     isSyncMode = !isSyncMode;
     const btn = document.getElementById('btn_toggle_sync');
     
     if (isSyncMode) {
-        btn.innerText = '模式1';
+        btn.innerText = '同步分子分母';
         btn.classList.add('btn-active-mode');
         
         // 切換回同步時，強制對齊數值
         let val = document.getElementById('fn').value;
         manualFactorChange('fn', val);
     } else {
-        btn.innerText = '模式2';
+        btn.innerText = '自由調整';
         btn.classList.remove('btn-active-mode');
         
         let fnVal = parseInt(document.getElementById('fn').value) || 1;
@@ -756,6 +824,8 @@ function generateRandomFraction() {
     
     document.getElementById('fn').value = 1;
     document.getElementById('fd').value = 1;
+    prevFdVal = 1;
+    prevFnVal = 1;
     syncOpColor(currentOp, 1, 1);
     
     renderEverything(true);
@@ -763,6 +833,9 @@ function generateRandomFraction() {
 
 function updateSpeedUI(val) {
     document.getElementById('speed_label').innerText = `動畫速度: ${Number(val).toFixed(1)} x`;
+    const fnVal = parseInt(document.getElementById('fn').value) || 1;
+    const fdVal = parseInt(document.getElementById('fd').value) || 1;
+    applyBarAnimDuration(getAnimTiming(fnVal, fdVal).animDuration);
 }
 
 function toggleNumberLine() {
@@ -844,6 +917,14 @@ function drawNumberLine(d_val, total_segments) {
     container.innerHTML = html;
 }
 
+function getNumberLineParams(n2, d2, op) {
+    let maxGrid = d2;
+    let ratio = n2 / d2;
+    let scale = Math.max(1, ratio);
+    let drawSegments = Math.max(maxGrid, Math.round(maxGrid * scale));
+    return { maxGrid, drawSegments };
+}
+
 function renderQuestionBanner() {
     const banner = document.getElementById('question_banner');
     if (targetNum === null && targetDen === null) { banner.classList.remove('show'); return; }
@@ -870,6 +951,8 @@ function setMode(op) {
     
     document.getElementById('fn').value = 1;
     document.getElementById('fd').value = 1;
+    prevFdVal = 1;
+    prevFnVal = 1;
     
     const btnMerge = document.getElementById('btn_merge');
     const btnSlice = document.getElementById('btn_slice');
@@ -980,6 +1063,132 @@ function syncOpColor(op, fnVal, fdVal) {
     document.getElementById('group_fd').style.borderLeftColor = isMismatch ? 'var(--red)' : '#000';
 }
 
+function buildGridHtml(drawSegments, fdVal, op, anim) {
+    let html = '<div class="grid-overlay">';
+    for (let i = 1; i <= drawSegments; i++) {
+        html += `<div class="segment"></div>`;
+        if (i < drawSegments) {
+            const isMainLine = (i % fdVal === 0 && op === '/') || (op === '*' && i % fdVal === 0);
+            if (op === '*') {
+                if (isMainLine || fdVal === 1) {
+                    html += `<div class="divider-thick"></div>`;
+                } else if (anim) {
+                    html += `<div class="divider-anim-slot"><div class="anim-line anim-line-dashed" style="height:0%"></div></div>`;
+                } else {
+                    html += `<div class="divider-thin"><div class="anim-line" style="height:100%"></div></div>`;
+                }
+            } else {
+                if (fdVal === 1) {
+                    html += `<div class="divider-thick"></div>`;
+                } else if (isMainLine) {
+                    html += `<div class="divider-thick"></div>`;
+                } else {
+                    const hS = anim ? '100%' : '0%';
+                    html += `<div class="divider-thin"><div class="anim-line" style="height:${hS}"></div></div>`;
+                }
+            }
+        }
+    }
+    html += '</div>';
+    return html;
+}
+
+// 同 FractionApp45 步驟 2：虛線由上往下生長（或向上收回）
+function animateLineHeights(lines, toPct, durationMs, generation) {
+    return new Promise(resolve => {
+        const list = Array.from(lines);
+        if (!list.length) { resolve(); return; }
+
+        const startHeights = list.map(l => {
+            const h = l.style.height;
+            return h.endsWith('%') ? parseFloat(h) : (toPct === 0 ? 100 : 0);
+        });
+        const start = performance.now();
+
+        function loop(now) {
+            if (generation !== drawProcessGeneration) { resolve(); return; }
+            const p = Math.min((now - start) / durationMs, 1);
+            list.forEach((l, i) => {
+                l.style.height = `${startHeights[i] + (toPct - startHeights[i]) * p}%`;
+            });
+            if (p < 1) requestAnimationFrame(loop);
+            else resolve();
+        }
+        requestAnimationFrame(loop);
+    });
+}
+
+// 合併格線：有倖存線則只滑動；僅一條細線時才上拉收回（不同時做兩者）
+function applyMergeGridAnimation(g, drawSegments, old_s, s, generation, onComplete) {
+    const speedVal = parseFloat(document.getElementById('speed_slider').value) || 1;
+    const animTimeMs = (0.6 / speedVal) * 1000;
+
+    const d = drawSegments / old_s;
+    const remove_j = Math.floor(old_s / 2);
+    const hasSlide = old_s > 2;
+
+    let html = '<div class="grid-overlay simplify-anim-overlay">';
+    for (let k = 1; k < d; k++) {
+        html += `<div class="simplify-abs-thick" style="left: ${(k / d) * 100}%;"></div>`;
+    }
+    for (let k = 0; k < d; k++) {
+        for (let j = 1; j < old_s; j++) {
+            const oldLeftPct = ((k * old_s + j) / (d * old_s)) * 100;
+            if (hasSlide) {
+                if (j === remove_j) continue;
+                const new_j = j < remove_j ? j : j - 1;
+                const newLeftPct = ((k * s + new_j) / (d * s)) * 100;
+                html += `<div class="simplify-retained-line" style="left: ${oldLeftPct}%; height: 100%; transition: left ${animTimeMs}ms ease-out;" data-target-left="${newLeftPct}%"></div>`;
+            } else if (j === remove_j) {
+                html += `<div class="simplify-removed-line" style="left: ${oldLeftPct}%; height: 100%; transition: height ${animTimeMs}ms ease-in;"></div>`;
+            }
+        }
+    }
+    html += '</div>';
+    g.innerHTML = html;
+
+    drawProcessAnimTimeout = setTimeout(() => {
+        if (generation !== drawProcessGeneration) return;
+        if (hasSlide) {
+            g.querySelectorAll('.simplify-retained-line').forEach(l => {
+                l.style.left = l.getAttribute('data-target-left');
+            });
+        } else {
+            g.querySelectorAll('.simplify-removed-line').forEach(l => { l.style.height = '0%'; });
+        }
+    }, 50);
+
+    drawProcessBgTimeouts.push(setTimeout(() => {
+        if (generation !== drawProcessGeneration) return;
+        onComplete();
+    }, 50 + animTimeMs + 20));
+}
+
+function scheduleGridLineAnimation(g, op, anim, fdVal, timing, generation, n1, d1, n2, d2, fnVal) {
+    if (!anim || fdVal === 1 || op === '/') return;
+
+    drawProcessAnimTimeout = setTimeout(() => {
+        if (generation !== drawProcessGeneration) return;
+        const lines = g.querySelectorAll('.anim-line');
+        const toPct = op === '*' ? 100 : 0;
+
+        animateLineHeights(lines, toPct, timing.animDurationMs, generation).then(() => {
+            if (generation !== drawProcessGeneration) return;
+            lines.forEach(l => {
+                const wrap = l.closest('.divider-anim-slot');
+                if (wrap) wrap.className = 'divider-thin';
+                l.classList.remove('anim-line-dashed');
+                l.style.borderLeft = '';
+                l.style.width = '';
+                l.style.left = '';
+                l.style.transform = '';
+                l.style.background = 'var(--grid-dark)';
+                l.style.height = '100%';
+            });
+        });
+    }, 50);
+}
+
 function renderEverything(anim) {
     const n1 = parseInt(document.getElementById('n_start').value) || 2;
     const d1 = parseInt(document.getElementById('d_start').value) || 8;
@@ -987,6 +1196,8 @@ function renderEverything(anim) {
     const elFd = document.getElementById('fd');
     const fnVal = elFn && elFn.value !== "" ? parseInt(elFn.value) : 1;
     const fdVal = elFd && elFd.value !== "" ? parseInt(elFd.value) : 1;
+    const savedPrevFd = prevFdVal;
+    const savedPrevFn = prevFnVal;
     
     document.getElementById('ln').innerText = n1;
     document.getElementById('ld').innerText = d1;
@@ -1039,90 +1250,82 @@ function renderEverything(anim) {
         if (nlContainer) nlContainer.style.visibility = 'visible';
         if (scaleWrapper) scaleWrapper.style.filter = 'grayscale(0%)';
         
-        drawProcess(n1, d1, n2, d2, fnVal, fdVal, currentOp, anim);
-        
-        let maxGrid = (currentOp === '*') ? d2 : d1;
-        let ratio = n2 / d2;
-        let scale = Math.max(1, ratio);
-        let drawSegments = Math.max(maxGrid, Math.round(maxGrid * scale));
-        
-        drawNumberLine(maxGrid, drawSegments);
+        const timing = getAnimTiming(fnVal, fdVal);
+
+        drawProcess(n1, d1, n2, d2, fnVal, fdVal, currentOp, anim, timing, savedPrevFd, savedPrevFn, false);
+
+        if (showNumberLine) {
+            const nlParams = getNumberLineParams(n2, d2, currentOp);
+            if (nlParams) drawNumberLine(nlParams.maxGrid, nlParams.drawSegments);
+        }
     } else {
         // 如果無法計算 (約分除不盡)，才套用灰階濾鏡
         if (scaleWrapper) scaleWrapper.style.filter = 'grayscale(100%)';
     }
+
+    prevFdVal = fdVal;
+    prevFnVal = fnVal;
 }
 
 // 更新長條圖繪製機制，支援延伸畫面
-function drawProcess(n1, d1, n2, d2, fnVal, fdVal, op, anim) {
+function drawProcess(n1, d1, n2, d2, fnVal, fdVal, op, anim, timing, prevFd, prevFn, skipShrinkCheck) {
     const b = document.getElementById('bar_process');
     const g = document.getElementById('grid_process');
     const scaleWrapper = document.getElementById('scale_wrapper');
     if(!b || !g || !scaleWrapper) return;
 
-    let maxGrid = (op === '*') ? d2 : d1;
+    if (!skipShrinkCheck) {
+        clearDrawProcessTimeouts();
+    }
+    const generation = ++drawProcessGeneration;
+
+    let maxGrid = (op === '*') ? d2 : ((anim && fdVal !== 1) ? d1 : d2);
     let ratio = n2 / d2;
     let scale = Math.max(1, ratio);
     let drawSegments = Math.max(maxGrid, Math.round(maxGrid * scale));
 
-    // 動態調整外層容器寬度，若比例大於1，容器會延長 (如 125%, 200%)，從而出現捲軸
+    if (!timing) timing = getAnimTiming(fnVal, fdVal);
+    applyBarAnimDuration(timing.animDuration);
+    scaleWrapper.style.transition = `width ${timing.animDuration} ease`;
+    b.style.transition = `width ${timing.animDuration} ease`;
     scaleWrapper.style.width = (scale * 100) + '%';
-    
-    // Bar長度的比例是依照 scaleWrapper 來算
     b.style.width = ((ratio / scale) * 100) + '%';
-    
-    let html = '<div class="grid-overlay">';
-    
-    let maxFactor = Math.max(fnVal, fdVal);
-    let baseAnimDuration = 4.0;
-    let baseBgTimeout = 3800; 
-    if (maxFactor > 3) {
-        baseAnimDuration = 2.0;
-        baseBgTimeout = 1800;
-    }
 
-    const speedVal = parseFloat(document.getElementById('speed_slider').value);
-    let animDuration = (baseAnimDuration / speedVal) + 's';
-    let bgTimeout = baseBgTimeout / speedVal;
+    const mountGrid = (useAnim) => {
+        g.innerHTML = buildGridHtml(drawSegments, fdVal, op, useAnim);
+        scheduleGridLineAnimation(g, op, useAnim, fdVal, timing, generation, n1, d1, n2, d2, fnVal);
+    };
 
-    for(let i=1; i <= drawSegments; i++) {
-        html += `<div class="segment"></div>`;
+    const isExpandDecrease = !skipShrinkCheck && anim && op === '*' && fdVal < prevFd && prevFd > 1;
+    const isSimplifyStep = !skipShrinkCheck && anim && op === '/' && fdVal > prevFd;
 
-        if (i < drawSegments) {
-            // 以分母的變化 (fdVal) 來決定分割線
-            const isMainLine = (i % fdVal === 0 && op === '/') || (op === '*' && i % fdVal === 0);
-
-            if (op === '*') {
-                if (isMainLine || fdVal === 1) {
-                    html += `<div class="divider-thick"></div>`;
-                } else {
-                    const hS = anim ? '0%' : '100%';
-                    html += `<div class="divider-thin"><div class="anim-line" style="height:${hS}; background: var(--accent); transition: height ${animDuration} cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s;"></div></div>`;
-                }
-            } else {
-                if (fdVal === 1) {
-                    html += `<div class="divider-thick"></div>`;
-                } else if (isMainLine) {
-                    html += `<div class="divider-thick"></div>`;
-                } else {
-                    const hS = anim ? '100%' : '0%';
-                    html += `<div class="divider-thin"><div class="anim-line" style="height:${hS}; background: var(--grid-dark); transition: height ${animDuration} cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s;"></div></div>`;
-                }
-            }
-        }
-    }
-    html += '</div>';
-    g.innerHTML = html;
-
-    if (anim && fdVal !== 1) {
-        setTimeout(() => {
-            const lines = g.querySelectorAll('.anim-line');
-            lines.forEach(l => {
-                l.style.height = (op === '*') ? '100%' : '0%';
-                if(op === '*') setTimeout(() => l.style.background = 'var(--grid-dark)', bgTimeout); 
+    if (isExpandDecrease) {
+        const prevD2 = d1 * prevFd;
+        const prevDrawSegments = Math.max(prevD2, Math.round(prevD2 * Math.max(1, n2 / d2)));
+        drawProcessAnimTimeout = setTimeout(() => {
+            if (generation !== drawProcessGeneration) return;
+            applyMergeGridAnimation(g, prevDrawSegments, prevFd, fdVal, generation, () => {
+                if (generation !== drawProcessGeneration) return;
+                mountGrid(false);
             });
         }, 50);
+        return;
     }
+
+    if (isSimplifyStep) {
+        drawProcessAnimTimeout = setTimeout(() => {
+            if (generation !== drawProcessGeneration) return;
+            applyMergeGridAnimation(g, drawSegments, fdVal, prevFd, generation, () => {
+                if (generation !== drawProcessGeneration) return;
+                const finalMaxGrid = d2;
+                const finalDrawSegments = Math.max(finalMaxGrid, Math.round(finalMaxGrid * (n2 / d2)));
+                g.innerHTML = buildGridHtml(finalDrawSegments, fdVal, op, false);
+            });
+        }, 50);
+        return;
+    }
+
+    mountGrid(anim);
 }
 
 window.onload = function() {

@@ -58,14 +58,14 @@ function toggleSyncMode() {
     const lenControls = document.getElementById('length_controls');
     
     if (isSyncMode) {
-        btn.innerText = '模式1';
+        btn.innerText = '固定長度';
         btn.classList.add('btn-active-mode');
         lenControls.style.display = 'none';
         // 強制恢復全滿且無垂直偏移
         containerWidths = [100, 100, 100];
         vOffsets = [0, 0, 0];
     } else {
-        btn.innerText = '模式2';
+        btn.innerText = '自由長度';
         btn.classList.remove('btn-active-mode');
         lenControls.style.display = 'flex';
     }

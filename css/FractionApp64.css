@@ -1,7 +1,7 @@
 :root { --primary: #3498db; --accent: #8e44ad; --success: #27ae60; --red: #e74c3c; --gray: #95a5a6; --grid-dark: #333; --yellow: #eeb015; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'PingFang HK', 'Microsoft JhengHei', 'Noto Sans TC', sans-serif; background: linear-gradient(135deg, #e0f7fa 0%, #fff9c4 100%); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-.container { background: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); max-width: 850px; width: 100%; }
+.container { background: white; padding: 1.5rem; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); max-width: 1000px; width: 100%; }
 
 /* Nav bar styles now in nav.css */
 #speed_slider { width: 80px; cursor: pointer; accent-color: var(--primary); }
@@ -49,18 +49,52 @@ body { font-family: 'PingFang HK', 'Microsoft JhengHei', 'Noto Sans TC', sans-se
 .visual-stack { width: 100%; display: flex; flex-direction: column; gap: 20px; margin-bottom: 20px; }
 .bar-label { font-weight: bold; margin-bottom: 5px; font-size: 1.1rem; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
 /* 移除 overflow: hidden 讓長度可以動態調整 */
-.bar-container { height: 70px; background: #eee; border-radius: 12px; position: relative; border: 2px solid var(--grid-dark); transition: width 0.3s ease, border-color 0.3s, box-shadow 0.3s, filter 0.3s; }
+.bar-container { height: 70px; background: #eee; border-radius: 12px; position: relative; border: 2px solid var(--grid-dark); transition: width var(--bar-anim-duration, 0.3s) ease, border-color 0.3s, box-shadow 0.3s, filter 0.3s; }
 
-.bar-fill { height: 100%; transition: width 0.4s ease; position: absolute; z-index: 1; opacity: 0.8; pointer-events: none; border-radius: 10px; }
+.bar-fill { height: 100%; transition: width var(--bar-anim-duration, 0.4s) ease; position: absolute; z-index: 1; opacity: 0.8; pointer-events: none; border-radius: 10px; }
 
 .grid-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; z-index: 2; pointer-events: none; border-radius: 10px; overflow: hidden; }
 .segment { flex: 1; }
 .divider-thick { flex: 0 0 3px; background: var(--grid-dark); z-index: 3; }
-.divider-thin { flex: 0 0 1px; position: relative; z-index: 3; }
-.divider-thin .anim-line { position: absolute; top: 0; left: 0; width: 100%; transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s; }
+.divider-thin { flex: 0 0 1px; position: relative; z-index: 3; background: transparent; }
+.divider-anim-slot { flex: 0 0 1px; position: relative; z-index: 3; background: transparent; }
+.divider-thin .anim-line,
+.divider-anim-slot .anim-line { position: absolute; top: 0; left: 0; width: 100%; background: var(--grid-dark); }
+.divider-thin .anim-line.anim-line-dashed,
+.divider-anim-slot .anim-line.anim-line-dashed {
+    left: 50%;
+    width: 0;
+    transform: translateX(-50%);
+    border-left: 2px dashed var(--grid-dark);
+    background: transparent;
+}
+
+/* 約分動畫 — 同 FractionApp47 applyGridAnimation simplify 分支 */
+.simplify-anim-overlay {
+    display: block;
+}
+.simplify-anim-overlay .simplify-abs-thick,
+.simplify-anim-overlay .simplify-removed-line,
+.simplify-anim-overlay .simplify-retained-line {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+}
+.simplify-anim-overlay .simplify-abs-thick {
+    width: 3px;
+    height: 100%;
+    background: var(--grid-dark);
+    z-index: 4;
+}
+.simplify-anim-overlay .simplify-removed-line,
+.simplify-anim-overlay .simplify-retained-line {
+    width: 1px;
+    background: var(--grid-dark);
+    z-index: 3;
+}
 
 /* 數線樣式 — 視覺樣式已移至 number-line.css；此處只留各 app 專屬行為 */
-.number-line-wrapper { padding: 0 2px; margin-top: 5px; transition: width 0.3s ease, opacity 0.3s ease; }
+.number-line-wrapper { padding: 0 2px; margin-top: 5px; transition: width var(--bar-anim-duration, 0.3s) ease; }
 
 .question-banner { display: none; background: #e3f2fd; border-radius: 14px; padding: 14px 20px; margin-bottom: 20px; text-align: center; border: 2px solid #bbdefb; }
 .question-banner.show { display: block; }

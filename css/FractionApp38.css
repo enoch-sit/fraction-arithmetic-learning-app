@@ -6,6 +6,46 @@
     z-index: 15;
 }
 
+/* Animation explanation panel */
+.explain-panel {
+    margin-top: 18px;
+    background: #f8fbfd;
+    border: 1px solid #d6e9f3;
+    border-left: 5px solid var(--blue);
+    border-radius: 10px;
+    padding: 16px 22px;
+}
+.explain-title {
+    font-size: 1.15rem;
+    font-weight: bold;
+    color: var(--blue);
+    margin-bottom: 10px;
+}
+.explain-steps {
+    margin: 0;
+    padding-left: 22px;
+    line-height: 1.9;
+    color: var(--dark);
+    font-size: 1.02rem;
+}
+.explain-steps li { margin-bottom: 4px; }
+.explain-steps .hl-red { color: var(--red); font-weight: bold; }
+.explain-steps .hl-blue { color: var(--blue); font-weight: bold; }
+
+/* Clickable ÷ operator acts as an animation reset button */
+.reset-op {
+    border-radius: 8px;
+    padding: 0 6px;
+    transition: background 0.15s, transform 0.15s;
+}
+.reset-op:hover {
+    background: #e8f4f8;
+    transform: scale(1.1);
+}
+.reset-op:active {
+    transform: scale(0.95);
+}
+
 @media (max-width: 768px) {
     .container { padding: 15px; }
         .formula { font-size: 1.5rem; }
@@ -16,4 +56,6 @@
         .bars-column { width: 100% !important; }
         .bar-wrap-container, .nl-wrap-container { justify-content: flex-start; }
         .bar-unit, .nl-unit { min-width: 80px; }
+        .explain-panel { padding: 12px 16px; }
+        .explain-steps { font-size: 0.95rem; line-height: 1.7; }
 }
