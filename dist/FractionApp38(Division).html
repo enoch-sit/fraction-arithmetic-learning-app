@@ -1456,6 +1456,7 @@ function setupManualDragAndFill(P1, P2, cd) {
             setTimeout(() => chunk.style.opacity = '0.4', 0);
         };
         chunk.ondragend = (e) => {
+            if (chunk.getAttribute('data-measured') === '1') return;
             chunk.style.opacity = '0.85';
         };
         // 支援點擊直接送出量測
@@ -1486,9 +1487,8 @@ function setupManualDragAndFill(P1, P2, cd) {
 
 function handleDropChunk(chunkId, molds, P1, P2, cd) {
     let chunk = document.getElementById(chunkId);
-    if (!chunk || chunk.style.visibility === 'hidden') return;
+    if (!chunk || chunk.getAttribute('data-measured') === '1') return;
 
-    let wrap2 = document.getElementById('bar2-wrap');
     let wrap3 = document.getElementById('bar3-wrap');
     let filledCount = parseInt(wrap3.getAttribute('data-filled')) || 0;
     let totalChunks = Math.ceil(P1 / P2);
@@ -1498,16 +1498,21 @@ function handleDropChunk(chunkId, molds, P1, P2, cd) {
     let targetMold = molds[filledCount];
     if (!targetMold) return;
 
-    // 隱藏原本上方列的色塊
-    chunk.style.visibility = 'hidden';
+    // 將原本上方列的色塊改為空心紅色虛線框，標示此份已被量出（不留任何實心色塊）
+    chunk.setAttribute('data-measured', '1');
+    chunk.style.backgroundColor = 'transparent';
+    chunk.style.opacity = '1';
+    chunk.style.border = '2px dashed var(--red)';
+    chunk.style.cursor = 'default';
     chunk.draggable = false;
+    chunk.onclick = null;
 
     // 預先佔用位置
     filledCount++;
     wrap3.setAttribute('data-filled', filledCount);
 
-    // -- 製作 2 秒的飛行動畫 --
-    let startRect = wrap2.getBoundingClientRect();
+    // -- 製作 2 秒的飛行動畫（從上方被拖的紅色色塊起飛，飛入下方結果模具）--
+    let startRect = chunk.getBoundingClientRect();
     let endRect = targetMold.getBoundingClientRect();
 
     let animBlock = document.createElement('div');
