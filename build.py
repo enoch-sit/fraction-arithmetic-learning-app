@@ -80,10 +80,25 @@ def build_one(html_path, out_path):
         f.write(html)
 
 
+def clean_dist():
+    """Delete the contents of dist/ (not the folder itself, which may be
+    locked by Explorer/browser/sync tools on Windows). Locked entries are
+    skipped with a warning instead of aborting the build."""
+    for name in os.listdir(DIST_DIR):
+        path = os.path.join(DIST_DIR, name)
+        try:
+            if os.path.isdir(path):
+                shutil.rmtree(path)
+            else:
+                os.remove(path)
+        except OSError as e:
+            print(f"  WARNING: could not delete {path}: {e}")
+    print(f"Cleaned {DIST_DIR}")
+
+
 def main():
     if "--clean" in sys.argv and os.path.exists(DIST_DIR):
-        shutil.rmtree(DIST_DIR)
-        print(f"Cleaned {DIST_DIR}")
+        clean_dist()
 
     os.makedirs(DIST_DIR, exist_ok=True)
 
