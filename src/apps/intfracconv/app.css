@@ -1,0 +1,98 @@
+:root {
+  --primary-red: #ff3333;
+  --border-blue: #0000ff;
+  --integer-green: #009900;
+  --bg-gray: #f9f9f9;
+}
+
+.app-container {
+  max-width: 850px;
+  margin: 0 auto;
+  background: white;
+  border: 1px solid #999;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 25px;
+}
+
+.header {
+  border-bottom: 2px solid #000080;
+  margin-bottom: 20px;
+  padding-bottom: 5px;
+  color: #000080;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+.dashboard {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 20px;
+  border-top: 2px solid #ccc;
+  padding-top: 20px;
+}
+
+.input-section {
+  background: var(--bg-gray);
+  padding: 15px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  position: relative;
+}
+
+.info-title {
+  color: #2d3748;
+  font-weight: bold;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #edf2f7;
+  padding-bottom: 5px;
+}
+
+.fraction-ui {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 15px 0;
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.mode-hint {
+  color: #888;
+  font-size: 0.85em;
+  margin-left: 5px;
+  line-height: 1.4;
+}
+
+.settings {
+  margin-top: 20px;
+}
+
+.settings label {
+  font-size: 0.9em;
+  margin-right: 10px;
+}
+
+.settings input[type="range"] {
+  width: 200px;
+}
+
+/* Mobile responsive */
+@media (max-width: 800px) {
+  .app-container {
+    padding: 15px;
+  }
+
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .fraction-ui {
+    flex-wrap: wrap;
+  }
+
+  .mode-hint {
+    flex-basis: 100%;
+  }
+}

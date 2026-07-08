@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  math-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: math-add-subtract-multiply-divide
+    ports:
+      - "3050:3000"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped

@@ -1,0 +1,57 @@
+.tutorial-finger {
+  position: absolute;
+  font-size: 3.5rem;
+  pointer-events: none;
+  z-index: 9999;
+  display: none;
+  filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.3));
+  transition: left 0.3s ease, top 0.3s ease;
+}
+
+.tutorial-finger-visible {
+  display: block;
+}
+
+.tutorial-finger-click {
+  animation: tutorialFingerClick 1s infinite;
+}
+
+.tutorial-finger-pulse {
+  animation: tutorialFingerPulse 1.15s ease-in-out infinite;
+}
+
+.tutorial-finger-float {
+  animation: tutorialFingerFloat 1.4s ease-in-out infinite;
+}
+
+@keyframes tutorialFingerClick {
+  0%, 100% {
+    transform: scale(1) translate(0, 0);
+  }
+
+  50% {
+    transform: scale(0.85) translate(0, 10px);
+  }
+}
+
+@keyframes tutorialFingerPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.12);
+    opacity: 0.82;
+  }
+}
+
+@keyframes tutorialFingerFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(8px);
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "public": "dist",
+  "rewrites": [
+    {
+      "source": "/subtraction",
+      "destination": "/subtraction.html"
+    },
+    {
+      "source": "/addition",
+      "destination": "/addition.html"
+    },
+    {
+      "source": "/multiplication",
+      "destination": "/multiplication.html"
+    },
+    {
+      "source": "/division",
+      "destination": "/division.html"
+    },
+    {
+      "source": "/expanding",
+      "destination": "/expanding.html"
+    },
+    {
+      "source": "/comparison",
+      "destination": "/comparison.html"
+    }
+  ]
+}

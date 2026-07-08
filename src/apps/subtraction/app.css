@@ -1,0 +1,994 @@
+@import '../../shared/base.css';
+
+/* Subtraction-specific */
+:root {
+  --max-wholes: 1;
+  --subtraction-panel-width: 70%;
+}
+
+.mixed-frac.frac-btn { padding: 2px; transition: 0.2s; }
+.whole-input { display: none; }
+.frac-text { font-size: 2rem; font-weight: bold; text-align: center; padding: 0 10px; color: var(--dark); }
+
+.instruction-text {
+  font-size: 1.3rem; font-weight: bold; color: var(--dark);
+  text-align: center; margin-bottom: 10px; display: none;
+  background: #fff4e6; padding: 12px 25px;
+  border-radius: 12px; border-left: 6px solid var(--orange);
+  width: 100%; max-width: 850px; box-sizing: border-box;
+  transition: opacity 0.5s; display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+
+.inline-frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; font-weight: bold; line-height: 1; margin: 0 5px; position: relative; top: -0.1em; }
+.inline-frac span { font-size: 1.1em; padding: 1px 4px; }
+.inline-frac .line { height: 2px; background-color: currentColor; width: 100%; margin: 2px 0; }
+
+#anim-area { width: 100%; min-height: 200px; position: relative; overflow: visible; margin-top: 5px; display: flex; flex-direction: column; gap: 20px; }
+
+#anim-area,
+#bar1-row,
+#bar2-row,
+#mismatch-preview-row,
+#label1,
+#label2,
+.bars-column,
+.bar-wrap-container,
+.bar-unit,
+.drag-block,
+.lego-piece,
+.lego-hit-zone,
+.lego-match-station,
+.match-station-tile,
+.match-hand-demo {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+@keyframes fadeInSlow { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
+.fade-in-slow { animation: fadeInSlow 1s ease-out forwards; }
+
+.tool-btn { background: #3498db; color: white; border: 2px solid transparent; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: transform 0.1s, background 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.tool-btn:hover { background: #2980b9; transform: scale(1.05); }
+.tool-btn:active { transform: scale(0.95); background: #1f618d; }
+
+.btn-hint { background: var(--orange); color: white; border: none; padding: 10px 25px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1.1rem; transition: 0.2s; box-shadow: 0 4px 6px rgba(230,126,34,0.3); margin-top: 15px; }
+.btn-hint:hover { background: #d35400; transform: translateY(-2px); box-shadow: 0 6px 8px rgba(230,126,34,0.4); }
+
+.bars-column { width: var(--subtraction-panel-width); display: flex; flex-direction: column; }
+
+.bar-wrap-container { width: 100%; display: flex; flex-wrap: wrap; gap: 15px; justify-content: flex-start; align-items: center; background: transparent; border: none; min-height: 60px; }
+
+.bar-unit { position: relative; height: 50px; width: calc((100% - (var(--max-wholes) - 1) * 15px) / var(--max-wholes)); min-width: 120px; flex: none; border: 3px solid var(--dark); box-sizing: border-box; background: transparent; border-radius: 0; overflow: hidden; }
+
+.abs-thick-line { position: absolute; top: 0; width: 3px; height: 100%; background: var(--dark); transform: translateX(-50%); z-index: 4; }
+.abs-thin-line { position: absolute; top: 0; width: 1px; height: 100%; background: var(--dark); transform: translateX(-50%); z-index: 3; }
+
+.bar-grid,
+.abs-thick-line,
+.abs-thin-line {
+  pointer-events: none;
+}
+
+.bar-wrap-container.continuous { gap: 0 !important; }
+.bar-wrap-container.continuous .bar-unit { width: calc(100% / var(--max-wholes)) !important; border-right: none; border-radius: 0; }
+.bar-wrap-container.continuous .bar-unit:last-child { border-right: 3px solid var(--dark); border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.bar-wrap-container.continuous .bar-unit:first-child { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+
+.nl-wrap-container { display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: flex-start; min-height: 45px; margin-top: 2px; border: none; position: relative; gap: 15px; }
+.nl-wrap-container.continuous { gap: 0 !important; }
+.nl-unit { position: relative; height: 45px; width: calc((100% - (var(--max-wholes) - 1) * 15px) / var(--max-wholes)); min-width: 120px; flex: none; box-sizing: border-box; }
+.nl-wrap-container.continuous .nl-unit { width: calc(100% / var(--max-wholes)) !important; }
+
+.mismatch-preview-column { gap: 6px; }
+
+.mismatch-preview-formula {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mismatch-preview-frac {
+  display: inline-flex;
+  align-items: center;
+}
+
+.mismatch-preview-operator,
+.mismatch-preview-question {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--dark);
+}
+
+.mismatch-preview-question { color: var(--orange); }
+
+.mismatch-preview-unit {
+  background: linear-gradient(180deg, rgba(255, 250, 241, 0.95) 0%, rgba(255, 244, 230, 0.9) 100%);
+}
+
+.mismatch-preview-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+.mismatch-preview-fill-blue {
+  background: linear-gradient(90deg, rgba(52, 152, 219, 0.95) 0%, rgba(41, 128, 185, 0.95) 100%);
+}
+
+.mismatch-preview-fill-red {
+  background: linear-gradient(90deg, rgba(231, 76, 60, 0.9) 0%, rgba(192, 57, 43, 0.92) 100%);
+}
+
+.mismatch-preview-nl-svg-wrap {
+  position: absolute;
+  inset: 0;
+}
+
+.mismatch-preview-milestone {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: max-content;
+}
+
+.mismatch-preview-milestone-line {
+  width: 2px;
+  height: 18px;
+  border-radius: 999px;
+}
+
+.mismatch-preview-milestone-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  line-height: 1;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.mismatch-preview-integer-label {
+  position: absolute;
+  bottom: 0;
+  font-size: 10px;
+  color: #2c3e50;
+}
+
+.mismatch-preview-integer-start { left: 0; }
+
+.mismatch-preview-integer-end { right: 0; }
+
+#bottom-answer-zone {
+  width: min(100%, 720px);
+  background: linear-gradient(180deg, #fffef8 0%, #fff9ea 100%);
+  padding: 22px 24px 24px;
+  border-radius: 20px;
+  border: 2px solid rgba(230, 126, 34, 0.28);
+  margin: 18px auto 0;
+  display: none;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 18px;
+  box-shadow: 0 18px 34px rgba(44, 62, 80, 0.1);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  transform: translateY(8px);
+  z-index: 50;
+  position: relative;
+}
+
+#bottom-answer-zone.answer-zone-visible {
+  transform: translateY(0);
+}
+
+#bottom-answer-zone::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border-top: 5px solid rgba(230, 126, 34, 0.42);
+  pointer-events: none;
+}
+.feedback-msg { font-size: 1.2rem; font-weight: bold; min-height: 28px; margin-top: 5px; opacity: 0; transition: opacity 0.3s, color 0.3s; text-align: center; }
+
+.answer-zone-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.answer-zone-kicker {
+  color: var(--orange);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.answer-stage-prompt {
+  margin-top: 3px;
+  color: var(--dark);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.answer-unit-badge {
+  flex: 0 0 auto;
+  font-size: 0.9rem;
+  color: var(--blue);
+  font-weight: 700;
+  background: #e8f4f8;
+  padding: 7px 12px;
+  border-radius: 14px;
+}
+
+.answer-unit-inline {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.answer-formula-row {
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 8px 0 4px;
+  flex-wrap: wrap;
+}
+
+.answer-input-group {
+  cursor: default;
+  padding: 5px 8px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(241, 196, 15, 0.22), 0 6px 14px rgba(44, 62, 80, 0.07);
+}
+
+.answer-fraction-line {
+  background: #ccc;
+}
+
+.answer-zone-actions {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.answer-secondary-btn {
+  margin-top: 0;
+  padding: 7px 14px;
+  font-size: 0.9rem;
+  color: #9a5800;
+  background: #fff4de;
+  border: 2px solid rgba(230, 126, 34, 0.24);
+  box-shadow: none;
+}
+
+.answer-secondary-btn:hover {
+  background: #e67e22;
+}
+
+.drag-block {
+  transition: transform 0.1s, opacity 0.18s ease, width 0.24s ease;
+  touch-action: none;
+  position: relative;
+  overflow: hidden;
+  border-radius: 2px;
+  display: flex;
+  gap: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background: transparent;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.18);
+}
+
+.drag-block:active { transform: scale(0.95); }
+
+.single-lego-block {
+  border-radius: 10px;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.34);
+  box-shadow: 0 12px 22px rgba(44, 62, 80, 0.2);
+}
+
+.lego-piece {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  position: relative;
+  box-sizing: border-box;
+  border: none;
+  border-right: 2px solid rgba(44, 62, 80, 0.32);
+  border-radius: 0;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -2px 0 rgba(44, 62, 80, 0.08);
+}
+
+.lego-piece:last-child {
+  border-right: none;
+}
+
+.lego-piece::before {
+  content: none;
+}
+
+.single-lego-block .lego-piece {
+  border: 1px solid rgba(44, 62, 80, 0.18);
+  border-radius: 8px;
+  box-shadow:
+    inset 0 -6px 0 rgba(44, 62, 80, 0.16),
+    inset 0 2px 0 rgba(255, 255, 255, 0.28),
+    0 2px 4px rgba(44, 62, 80, 0.08);
+}
+
+.single-lego-block .lego-piece::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  width: min(50%, 22px);
+  height: 8px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.38);
+  box-shadow: inset 0 -2px 0 rgba(44, 62, 80, 0.12);
+}
+
+.lego-hit-zone {
+  position: absolute;
+  z-index: 18;
+  cursor: grab;
+  touch-action: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.lego-hit-zone:active {
+  cursor: grabbing;
+}
+
+.guided-next-target {
+  position: relative;
+  box-shadow: 0 0 0 4px rgba(241, 196, 15, 0.22);
+  border-radius: 12px;
+}
+
+.drag-block.removal-source-active {
+  outline: 3px solid rgba(241, 196, 15, 0.95);
+  box-shadow: 0 0 0 4px rgba(241, 196, 15, 0.2);
+  cursor: grab;
+  animation: activeLegoPulse 1s ease-in-out infinite;
+}
+
+.drag-block.match-target-active {
+  outline: 3px solid rgba(52, 152, 219, 0.9);
+  box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.16);
+  cursor: grab;
+}
+
+.bar-unit:has(.match-target-active),
+.bar-unit:has(.removal-source-active) {
+  box-shadow: 0 0 0 4px rgba(241, 196, 15, 0.12);
+}
+
+.bar-lane-drop-over {
+  background: rgba(39, 174, 96, 0.12) !important;
+  box-shadow: 0 0 0 7px rgba(39, 174, 96, 0.2) !important;
+}
+
+.drag-block.match-target-over {
+  outline-color: rgba(39, 174, 96, 0.95);
+  box-shadow: 0 0 0 6px rgba(39, 174, 96, 0.22);
+  transform: scale(1.03);
+}
+
+.drag-block.dragging-source {
+  opacity: 0.35 !important;
+  cursor: grabbing;
+}
+
+.removal-drag-ghost {
+  border-radius: 7px;
+  box-shadow: 0 14px 24px rgba(44, 62, 80, 0.22);
+  opacity: 0.9 !important;
+  transform: scale(1.03);
+}
+
+.subtrahend-countdown-active #bar2-wrap .bar-unit {
+  background: rgba(52, 152, 219, 0.06);
+}
+
+.subtrahend-countdown-active #bar2-wrap .drag-block {
+  transform-origin: left center;
+  box-shadow: inset -3px 0 0 rgba(255, 255, 255, 0.45);
+}
+
+.trash-meter-card {
+  width: min(100%, var(--subtraction-panel-width));
+  background: linear-gradient(180deg, #fffaf1 0%, #fff1de 100%);
+  border: 2px solid rgba(230, 126, 34, 0.25);
+  border-radius: 18px;
+  padding: 14px 18px;
+  box-shadow: 0 8px 18px rgba(230, 126, 34, 0.12);
+}
+
+.trash-meter-card.trash-meter-card-complete {
+  width: min(100%, 360px);
+  min-width: 0;
+  padding: 8px 10px;
+  background: #f7fff7;
+  border-color: rgba(39, 174, 96, 0.24);
+  border-radius: 24px;
+  box-shadow: 0 6px 14px rgba(39, 174, 96, 0.08);
+}
+
+#trash-area.trash-area-complete {
+  min-height: 0 !important;
+  margin-top: 6px !important;
+  padding-top: 8px !important;
+  border-top-color: rgba(39, 174, 96, 0.18) !important;
+}
+
+.trash-meter-card.trash-meter-card-complete .trash-meter-track {
+  display: none;
+}
+
+.trash-meter-card.trash-meter-card-complete .trash-meter-head {
+  justify-content: center;
+  gap: 8px;
+}
+
+.trash-meter-card.trash-meter-card-complete .trash-can-icon {
+  font-size: 1.45rem;
+}
+
+.trash-meter-card.trash-meter-card-complete .trash-meter-title {
+  display: none;
+}
+
+.trash-meter-card.trash-meter-card-complete .trash-progress-copy {
+  display: none;
+  color: var(--success);
+}
+
+.trash-meter-card.trash-meter-card-complete .trash-status-copy {
+  display: none;
+}
+
+.trash-meter-card.trash-meter-card-complete .trash-meter-copy {
+  display: block;
+  color: var(--success);
+  font-size: 0.95rem;
+  min-width: 0;
+}
+
+.trash-meter-card.trash-meter-card-complete .subtraction-playback-controls {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.trash-meter-card.trash-meter-card-complete .lego-match-station {
+  display: none;
+}
+
+.trash-meter-card.trash-meter-card-complete .subtraction-playback-btn {
+  padding: 5px 10px;
+  font-size: 0.85rem;
+}
+
+.trash-meter-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.trash-can-icon {
+  font-size: 3.2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.trash-can-icon.trash-can-ready {
+  animation: trashCanPulse 1.2s ease-in-out infinite;
+  filter: drop-shadow(0 8px 10px rgba(230, 126, 34, 0.2));
+}
+
+.trash-can-icon.trash-can-drag-over {
+  transform: scale(1.18);
+  filter: drop-shadow(0 10px 14px rgba(39, 174, 96, 0.35));
+}
+
+.trash-meter-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--dark);
+  font-weight: 700;
+}
+
+.trash-meter-title {
+  font-size: 1.05rem;
+}
+
+.trash-meter-track {
+  position: relative;
+  width: 100%;
+  height: 22px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  border: 2px solid rgba(44, 62, 80, 0.18);
+  background-color: rgba(255, 255, 255, 0.9);
+  background-image: linear-gradient(to right, transparent calc(100% - 2px), rgba(44, 62, 80, 0.18) calc(100% - 2px));
+  background-size: calc(100% / var(--trash-target-pieces, 1)) 100%;
+  background-repeat: repeat-x;
+}
+
+.trash-meter-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff8f70 0%, #e74c3c 100%);
+  transition: width 0.35s ease;
+}
+
+.trash-progress-copy,
+.trash-status-copy {
+  margin-top: 8px;
+  color: var(--dark);
+  font-weight: 700;
+}
+
+.trash-status-copy .inline-frac {
+  margin: 0 2px;
+}
+
+.lego-match-station {
+  display: grid;
+  grid-template-columns: minmax(96px, 1fr) minmax(130px, auto) minmax(96px, 1fr);
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  position: relative;
+  isolation: isolate;
+  box-shadow: none;
+}
+
+.lego-match-station::before,
+.lego-match-station::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  border-top: 4px solid rgba(39, 174, 96, 0.65);
+  border-right: 4px solid rgba(39, 174, 96, 0.65);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.lego-match-station::before {
+  left: calc(33.333% - 16px);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.lego-match-station::after {
+  right: calc(33.333% - 16px);
+  transform: translateY(-50%) rotate(225deg);
+}
+
+.match-station-tile {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 900;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 -7px 0 rgba(44, 62, 80, 0.16), 0 9px 18px rgba(44, 62, 80, 0.16);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
+}
+
+.match-station-tile::before,
+.match-station-tile::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  width: 18px;
+  height: 10px;
+  border-radius: 999px 999px 4px 4px;
+  background: rgba(255, 255, 255, 0.32);
+  box-shadow: inset 0 -2px 0 rgba(44, 62, 80, 0.12);
+}
+
+.match-station-tile::before { left: 20%; }
+.match-station-tile::after { right: 20%; }
+
+.lego-match-station:not(.match-station-disabled) .match-station-tile:hover,
+.lego-match-station:not(.match-station-disabled) .match-station-tile:focus-visible {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: inset 0 -7px 0 rgba(44, 62, 80, 0.16), 0 14px 24px rgba(44, 62, 80, 0.2);
+}
+
+.match-station-tile:active {
+  transform: translateY(2px) scale(0.98);
+}
+
+.match-station-red { background: #e74c3c; }
+
+.match-station-blue { background: #3498db; }
+
+.match-hand-demo {
+  min-height: 64px;
+  min-width: 108px;
+  display: grid;
+  place-items: center;
+  position: relative;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+.match-hand-path {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 50%;
+  height: 4px;
+  border-radius: 999px;
+  background: repeating-linear-gradient(
+    to right,
+    rgba(39, 174, 96, 0.38) 0 8px,
+    transparent 8px 14px
+  );
+  transform: translateY(-50%);
+}
+
+.match-hand-path::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-top: 4px solid rgba(39, 174, 96, 0.58);
+  border-right: 4px solid rgba(39, 174, 96, 0.58);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.match-hand-icon {
+  position: relative;
+  z-index: 1;
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: #fffdf4;
+  border: 3px solid rgba(39, 174, 96, 0.24);
+  box-shadow: 0 8px 16px rgba(44, 62, 80, 0.12);
+  font-size: 1.45rem;
+  transform-origin: center;
+  animation: grabbingHandGuide 1.25s ease-in-out 3;
+}
+
+.match-hand-demo:hover .match-hand-icon,
+.match-hand-demo:focus-visible .match-hand-icon {
+  border-color: rgba(39, 174, 96, 0.46);
+  box-shadow: 0 10px 20px rgba(39, 174, 96, 0.18);
+}
+
+.match-hand-demo[aria-disabled="true"],
+.match-station-disabled .match-station-tile {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.match-station-guided {
+  filter: drop-shadow(0 0 10px rgba(39, 174, 96, 0.18));
+  animation: matchStationGlow 1.1s ease-in-out infinite;
+}
+
+.match-station-guided .match-station-red {
+  animation: redLegoNudge 1.1s ease-in-out infinite;
+}
+
+.match-station-guided .match-station-blue {
+  animation: blueLegoNudge 1.1s ease-in-out infinite;
+}
+
+.match-station-guided .match-hand-icon {
+  animation-duration: 0.95s;
+}
+
+.match-station-over {
+  outline: 4px solid rgba(39, 174, 96, 0.35);
+  transform: scale(1.04);
+}
+
+.match-station-dragging { opacity: 0.4; }
+
+.match-station-ghost {
+  border-radius: 10px;
+  box-shadow: 0 14px 24px rgba(44, 62, 80, 0.22);
+  opacity: 0.95 !important;
+  transform: scale(1.02);
+}
+
+.subtraction-playback-controls {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.subtraction-playback-btn {
+  border: 2px solid rgba(52, 152, 219, 0.28);
+  background: #f4fbff;
+  color: var(--blue);
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+}
+
+.subtraction-playback-btn:hover:not(:disabled) {
+  background: #e8f4f8;
+  transform: translateY(-1px);
+}
+
+.subtraction-playback-btn:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.subtraction-hand-cue {
+  position: fixed;
+  z-index: 10001;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 253, 245, 0.96);
+  border: 2px solid rgba(241, 196, 15, 0.88);
+  box-shadow: 0 10px 20px rgba(44, 62, 80, 0.15);
+  color: var(--dark);
+  font-weight: 700;
+  pointer-events: none;
+  transform-origin: center;
+  animation: subtractionHandIdle 1s ease-in-out infinite;
+}
+
+.subtraction-hand-travel {
+  animation: none;
+}
+
+.subtraction-hand-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.subtraction-hand-text {
+  font-size: 0.88rem;
+  white-space: nowrap;
+  max-width: 180px;
+}
+
+.subtraction-tool-cue .subtraction-hand-text {
+  max-width: 64px;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.subtraction-tool-cue {
+  padding: 5px 9px;
+}
+
+.bar-grab-demo {
+  position: fixed;
+  z-index: 10001;
+  width: 44px;
+  height: 44px;
+  pointer-events: none;
+  transform-origin: center;
+}
+
+.bar-grab-path-line {
+  position: absolute;
+  left: 22px;
+  top: 22px;
+  width: var(--bar-grab-distance, 80px);
+  height: 4px;
+  border-radius: 999px;
+  background: repeating-linear-gradient(
+    to right,
+    rgba(39, 174, 96, 0.44) 0 9px,
+    transparent 9px 15px
+  );
+  transform: rotate(var(--bar-grab-angle, 0rad));
+  transform-origin: left center;
+  opacity: 0.9;
+}
+
+.bar-grab-path-line::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-top: 4px solid rgba(39, 174, 96, 0.58);
+  border-right: 4px solid rgba(39, 174, 96, 0.58);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.bar-grab-carrier {
+  position: absolute;
+  inset: 0;
+  animation: barGrabTravel 1.35s ease-in-out 3;
+}
+
+.bar-grab-piece {
+  position: absolute;
+  left: 4px;
+  top: 11px;
+  width: 28px;
+  height: 24px;
+  border-radius: 5px;
+  background: var(--red);
+  box-shadow:
+    inset 0 -5px 0 rgba(44, 62, 80, 0.16),
+    inset 0 2px 0 rgba(255, 255, 255, 0.28),
+    0 8px 16px rgba(44, 62, 80, 0.18);
+}
+
+.bar-grab-piece::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 5px;
+  width: 13px;
+  height: 5px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.38);
+}
+
+.bar-grab-hand {
+  position: absolute;
+  right: -4px;
+  top: -5px;
+  font-size: 1.55rem;
+  filter: drop-shadow(0 6px 8px rgba(44, 62, 80, 0.16));
+  animation: barGrabHandPinch 1.35s ease-in-out 3;
+}
+
+@keyframes subtractionHandIdle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes barGrabTravel {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.95;
+  }
+  16% {
+    transform: translate(0, 0) scale(0.94);
+    opacity: 1;
+  }
+  56% {
+    transform: translate(var(--bar-grab-dx), var(--bar-grab-dy)) scale(0.94);
+    opacity: 1;
+  }
+  76% {
+    transform: translate(var(--bar-grab-dx), var(--bar-grab-dy)) scale(1.04);
+    opacity: 0.72;
+  }
+}
+
+@keyframes barGrabHandPinch {
+  0%, 100% { transform: rotate(-10deg) scale(1); }
+  18%, 58% { transform: rotate(-6deg) scale(0.88); }
+  76% { transform: rotate(8deg) scale(1.05); }
+}
+
+@keyframes trashCanPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes activeLegoPulse {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes matchStationGlow {
+  0%, 100% {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8), 0 0 0 0 rgba(39, 174, 96, 0.18);
+  }
+  50% {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8), 0 0 0 8px rgba(39, 174, 96, 0.1);
+  }
+}
+
+@keyframes redLegoNudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(8px); }
+}
+
+@keyframes blueLegoNudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-8px); }
+}
+
+@keyframes grabbingHandGuide {
+  0%, 100% {
+    transform: translateX(-24px) rotate(-8deg) scale(1);
+  }
+  18% {
+    transform: translateX(-24px) rotate(-8deg) scale(0.92);
+  }
+  52% {
+    transform: translateX(24px) rotate(8deg) scale(0.92);
+  }
+  72% {
+    transform: translateX(24px) rotate(8deg) scale(1.05);
+  }
+}
+
+@keyframes errorShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+@media (max-width: 768px) {
+  .bars-column { width: 100% !important; }
+  .trash-meter-card { width: 100%; }
+  #bar1-row, #bar2-row { flex-direction: column; height: auto !important; gap: 10px; padding-bottom: 10px; }
+  .bar-wrap-container, .nl-wrap-container { justify-content: flex-start; }
+  .bar-unit, .nl-unit { min-width: 80px; }
+  .trash-meter-head { align-items: flex-start; }
+  .trash-can-icon { font-size: 2.6rem; }
+  .lego-match-station { grid-template-columns: 1fr; }
+  .lego-match-station::before,
+  .lego-match-station::after { display: none; }
+}

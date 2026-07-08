@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>整數與分數互換</title>
+    <style>
+        :root {
+            --primary-red: #ff3333;
+            --border-blue: #0000ff;
+            --integer-green: #009900; 
+            --bg-gray: #f9f9f9;
+        }
+
+        body {
+            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
+            background-color: #d6d6d6;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .app-container {
+            width: 850px;
+            background: white;
+            border: 1px solid #999;
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.1);
+            padding: 25px;
+        }
+
+        .header {
+            border-bottom: 2px solid #000080;
+            margin-bottom: 20px;
+            padding-bottom: 5px;
+            color: #000080;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .bars-container {
+            display: flex;
+            flex-wrap: nowrap; 
+            column-gap: 0px; 
+            row-gap: 50px;    
+            margin-bottom: 40px;
+            min-height: 80px;
+            align-items: flex-start;
+            padding: 20px 50px; 
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+
+        .bar-wrapper {
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            margin-right: -2px; 
+        }
+
+        /* ----- 平滑轉換核心樣式 ----- */
+        .unit-bar {
+            position: relative;
+            display: flex;
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, calc(1 - var(--f, 0)));
+            height: var(--bar-h, 45px);
+            margin-top: calc(15px * var(--f, 0));
+            margin-bottom: calc(5px * var(--f, 0));
+            border-radius: 2px;
+        }
+
+        .center-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: rgba(51, 51, 51, var(--f, 0));
+            transform: translateY(-50%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .border-overlay {
+            position: absolute;
+            inset: 0;
+            box-sizing: border-box;
+            border: 2px solid rgba(0, 0, 255, calc(1 - var(--f, 0)));
+            z-index: 4;
+            pointer-events: none;
+            border-radius: 2px;
+        }
+
+        .unit-bar::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1px;
+            height: calc(100% * (1 - var(--f, 0)) + 12px * var(--f, 0));
+            background-color: #666;
+            opacity: var(--f, 0);
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .cell {
+            position: relative;
+            flex: 1;
+            cursor: pointer;
+            z-index: 2;
+            background-color: transparent;
+            transition: background-color 0.2s;
+        }
+
+        .cell.filled {
+            background-color: var(--primary-red);
+        }
+        
+        .cell:hover {
+            background-color: rgba(255, 51, 51, 0.2);
+        }
+        
+        .cell.filled:hover {
+            background-color: #ff6666;
+        }
+
+        .cell::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1px;
+            height: calc(100% * (1 - var(--f, 0)) + 12px * var(--f, 0));
+            background-color: #666;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .cell:last-child::after {
+            opacity: var(--f, 0);
+        }
+
+        .label-row {
+            position: relative;
+            height: 30px;
+            margin-top: calc(5px + 5px * var(--f, 0)); 
+            width: 100%;
+        }
+        /* -------------------------- */
+
+        .bar-label {
+            position: absolute;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            display: flex;
+            justify-content: center;
+            top: 0;
+        }
+
+        .bar-label .main {
+            font-weight: bold;
+            font-size: 15px;
+            color: var(--integer-green); 
+        }
+
+        .stacked-fraction {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            font-size: 13px;
+            line-height: 1.2;
+        }
+        
+        .stacked-fraction .num {
+            border-bottom: 1.5px solid #333;
+            padding: 0 2px;
+            width: 100%;
+            text-align: center;
+            color: var(--primary-red);
+            font-weight: bold;
+        }
+        
+        .stacked-fraction .den {
+            padding: 0 2px;
+            width: 100%;
+            text-align: center;
+            color: var(--border-blue);
+        }
+        
+        .mixed-number {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .mixed-number .whole {
+            font-size: 15px;
+            font-weight: bold;
+            color: var(--integer-green); 
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 20px;
+            border-top: 2px solid #ccc;
+            padding-top: 20px;
+        }
+
+        .input-section {
+            background: var(--bg-gray);
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            position: relative;
+        }
+
+        .fraction-ui {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        input[type="number"] {
+            width: 55px;
+            padding: 5px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+        }
+
+        #inputWhole {
+            border-color: var(--integer-green); 
+            background-color: white; 
+        }
+
+        #inputNum {
+            color: var(--primary-red);
+            border-color: #ff9999;
+        }
+
+        #inputDen {
+            color: var(--border-blue);
+            border-color: #9999ff;
+        }
+
+        .f-line {
+            width: 100%;
+            height: 2px;
+            background: black;
+            margin: 4px 0;
+        }
+
+        .btn-confirm {
+            padding: 6px 15px;
+            font-size: 1em;
+            font-weight: bold;
+            background-color: #000080;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-confirm:hover {
+            background-color: #0000b3;
+        }
+
+        .mode-hint {
+            color: #888;
+            font-size: 0.85em;
+            margin-left: 5px;
+        }
+
+        .info-section {
+            padding: 15px;
+            border: 1px solid #cbd5e0;
+            background-color: #fff;
+            border-radius: 5px;
+        }
+
+        .info-title {
+            color: #2d3748;
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        #customContextMenu {
+            display: none;
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
+            border-radius: 4px;
+        }
+
+        #customContextMenu div {
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        #customContextMenu div:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">整數與分數互換</div>
+
+    <div id="barsDisplay" class="bars-container"></div>
+
+    <div class="dashboard">
+        <div class="input-section">
+            <div class="info-title">請輸入數值</div>
+            <div class="fraction-ui" id="inputArea">
+                <input type="number" id="inputWhole" value="1" min="1" max="100">
+                <div class="fraction-input-stack" id="fractionPart" style="display:inline-flex; flex-direction: column; align-items: center;">
+                    <input type="number" id="inputNum" value="1" min="1" max="100">
+                    <div class="f-line"></div>
+                    <input type="number" id="inputDen" value="3" min="1" max="100">
+                </div>
+                <button class="btn-confirm" onclick="updateUI()">確定</button>
+                <span class="mode-hint">網頁版可右點擊,<br>平板可長按以切換模式</span>
+            </div>
+
+            <div class="settings" style="margin-top: 20px;">
+                <div>
+                    <label>長條圖高度：</label>
+                    <input type="range" id="heightSlider" min="0" max="100" value="45" oninput="updateUI()">
+                </div>
+                <div style="margin-top: 10px;">
+                    <label>單位闊度：</label>
+                    <input type="range" id="widthSlider" min="50" max="300" value="150" oninput="updateUI()">
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section" id="explanationText"></div>
+    </div>
+</div>
+
+<div id="customContextMenu">
+    <div onclick="setMode('whole')">整數</div>
+    <div onclick="setMode('fraction')">分數</div>
+    <div onclick="setMode('mixed')">帶分數</div>
+</div>
+
+<script>
+    let FIXED_UNIT_WIDTH = 150; 
+    const UNITS_PER_ROW = 5; 
+
+    const inputArea = document.getElementById('inputArea');
+    const contextMenu = document.getElementById('customContextMenu');
+    let longPressTimer;
+
+    inputArea.oncontextmenu = function(e) {
+        e.preventDefault();
+        showMenu(e.pageX, e.pageY);
+    };
+
+    inputArea.ontouchstart = function(e) {
+        longPressTimer = setTimeout(() => {
+            showMenu(e.touches[0].pageX, e.touches[0].pageY);
+        }, 600);
+    };
+    inputArea.ontouchend = function() { clearTimeout(longPressTimer); };
+
+    function showMenu(x, y) {
+        contextMenu.style.display = 'block';
+        contextMenu.style.left = x + 'px';
+        contextMenu.style.top = y + 'px';
+    }
+
+    window.onclick = function() { contextMenu.style.display = 'none'; };
+
+    function setMode(mode) {
+        const wholeInp = document.getElementById('inputWhole');
+        const numInp = document.getElementById('inputNum');
+        const denInp = document.getElementById('inputDen');
+        const fracPart = document.getElementById('fractionPart');
+        
+        // 每次修改模式時，所有數格全部重設為 1
+        wholeInp.value = 1;
+        numInp.value = 1;
+        denInp.value = 1;
+        
+        if (mode === 'whole') {
+            wholeInp.style.display = 'block';
+            fracPart.style.display = 'none';
+        } else if (mode === 'fraction') {
+            wholeInp.style.display = 'none';
+            fracPart.style.display = 'inline-flex';
+        } else {
+            wholeInp.style.display = 'block';
+            fracPart.style.display = 'inline-flex';
+        }
+        updateUI();
+    }
+
+    function updateUI() {
+        let wholeStr = document.getElementById('inputWhole').value;
+        let whole = parseInt(wholeStr);
+        if (whole <= 0) { whole = 1; document.getElementById('inputWhole').value = 1; }
+        else if (isNaN(whole)) { whole = 1; } 
+        else if (whole > 100) { whole = 100; document.getElementById('inputWhole').value = 100; }
+
+        let numStr = document.getElementById('inputNum').value;
+        let num = parseInt(numStr);
+        if (num <= 0) { num = 1; document.getElementById('inputNum').value = 1; }
+        else if (isNaN(num)) { num = 1; } 
+        else if (num > 100) { num = 100; document.getElementById('inputNum').value = 100; }
+
+        let denStr = document.getElementById('inputDen').value;
+        let den = parseInt(denStr);
+        if (den <= 0) { den = 1; document.getElementById('inputDen').value = 1; }
+        else if (isNaN(den)) { den = 1; } 
+        else if (den > 100) { den = 100; document.getElementById('inputDen').value = 100; }
+        
+        let actualW = whole;
+        let actualN = num;
+
+        // 當整數輸入框隱藏時 (分數模式)，其邏輯值為 0
+        if (document.getElementById('inputWhole').style.display === 'none') {
+            actualW = 0;
+        }
+
+        // 當分數組件隱藏時 (整數模式)，分子邏輯值為 0
+        if (document.getElementById('fractionPart').style.display === 'none') {
+            actualN = 0;
+        }
+
+        const barHeight = parseInt(document.getElementById('heightSlider').value);
+        FIXED_UNIT_WIDTH = parseInt(document.getElementById('widthSlider').value) || 150;
+
+        renderBars(actualW, actualN, den, barHeight);
+        renderText(actualW, actualN, den);
+    }
+
+    function handleCellClick(clickedTotalCells, d) {
+        const wholeInp = document.getElementById('inputWhole');
+        const numInp = document.getElementById('inputNum');
+        const fracPart = document.getElementById('fractionPart');
+
+        if (wholeInp.style.display === 'none') {
+            wholeInp.value = 1;
+            numInp.value = clickedTotalCells;
+        } else if (fracPart.style.display === 'none') {
+            let w = Math.ceil(clickedTotalCells / d);
+            wholeInp.value = w > 0 ? w : 1;
+            numInp.value = 1;
+        } else {
+            let w = Math.floor(clickedTotalCells / d);
+            let n = clickedTotalCells % d;
+            
+            if (w < 1) w = 1;
+            if (n < 1) n = 1;
+            
+            wholeInp.value = w;
+            numInp.value = n;
+        }
+        updateUI();
+    }
+
+    function renderBars(w, n, d, height) {
+        const container = document.getElementById('barsDisplay');
+        container.innerHTML = '';
+
+        let f = 0;
+        if (height <= 6) f = 1;
+        else if (height >= 26) f = 0;
+        else f = (26 - height) / 20;
+
+        container.style.setProperty('--f', f);
+        container.style.setProperty('--bar-h', Math.max(height, 4) + 'px');
+
+        let displayD = d;
+        let totalFilledCells = (w * d) + n;
+
+        // 修正：如果輸入為整數，將不顯示分數的分隔線（將 displayD 設為 1）
+        if (n === 0) {
+            displayD = 1;
+            totalFilledCells = w;
+        }
+
+        // 修正：只加到其數值到整數，不必每次多加空白格
+        const totalUnitsNeeded = Math.max(Math.ceil(totalFilledCells / displayD), 1);
+
+        for (let u = 0; u < totalUnitsNeeded; u++) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'bar-wrapper';
+            wrapper.style.width = FIXED_UNIT_WIDTH + 'px';
+
+            const bar = document.createElement('div');
+            bar.className = 'unit-bar';
+            
+            const centerLine = document.createElement('div');
+            centerLine.className = 'center-line';
+            bar.appendChild(centerLine);
+
+            const borderOverlay = document.createElement('div');
+            borderOverlay.className = 'border-overlay';
+            bar.appendChild(borderOverlay);
+            
+            let filledInThisUnit = 0;
+            if (totalFilledCells > u * displayD) {
+                filledInThisUnit = Math.min(displayD, totalFilledCells - (u * displayD));
+            }
+
+            for (let i = 0; i < displayD; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell' + (i < filledInThisUnit ? ' filled' : '');
+                cell.onclick = () => handleCellClick((u * displayD) + i + 1, displayD);
+                bar.appendChild(cell);
+            }
+            wrapper.appendChild(bar);
+
+            const labelRow = document.createElement('div');
+            labelRow.className = 'label-row';
+            for (let i = 0; i <= displayD; i++) {
+                if (i === displayD && u < totalUnitsNeeded - 1 && (u + 1) % UNITS_PER_ROW !== 0) continue;
+
+                const lbl = document.createElement('div');
+                lbl.className = 'bar-label';
+                lbl.style.left = (i / displayD * 100) + '%';
+                
+                let valWhole = u, valRem = i;
+                if (i === displayD) { valWhole = u + 1; valRem = 0; }
+                
+                if (valRem === 0) {
+                    lbl.innerHTML = `<span class="main">${valWhole}</span>`;
+                } else {
+                    const fracHtml = `<div class="stacked-fraction"><span class="num">${valRem}</span><span class="den">${displayD}</span></div>`;
+                    lbl.innerHTML = valWhole === 0 ? fracHtml : `<div class="mixed-number"><span class="whole">${valWhole}</span>${fracHtml}</div>`;
+                }
+                labelRow.appendChild(lbl);
+            }
+            wrapper.appendChild(labelRow);
+            container.appendChild(wrapper);
+        }
+    }
+
+    function renderText(w, n, d) {
+        const div = document.getElementById('explanationText');
+        const totalNum = w * d + n;
+        const actualW = Math.floor(totalNum / d), actualN = totalNum % d;
+        
+        // 修正：細分「真分數」與「假分數」
+        let type = "分數";
+        if (w > 0 && n > 0) {
+            type = "帶分數";
+        } else if (n === 0) {
+            type = "整數";
+        } else if (w === 0 && n > 0) {
+            if (n < d) {
+                type = "真分數";
+            } else {
+                type = "假分數";
+            }
+        }
+
+        let convertHtml = '';
+        
+        const fFrac = (nu, de) => `<div class="stacked-fraction"><span class="num">${nu}</span><span class="den">${de}</span></div>`;
+        const fMix = (wh, nu, de) => `<div class="mixed-number"><span class="whole">${wh}</span>${fFrac(nu, de)}</div>`;
+
+        if (totalNum > 0 && !(w === 0 && n === totalNum)) {
+            convertHtml += `<div style="display:flex; align-items:center; margin-bottom:8px;">轉換為分數：<div style="margin-left:10px;">${fFrac(totalNum, d)}</div></div>`;
+        }
+        if (actualW > 0 && actualN > 0 && !(w === actualW && n === actualN)) {
+            convertHtml += `<div style="display:flex; align-items:center; margin-bottom:8px;">轉換為帶分數：<div style="margin-left:10px;">${fMix(actualW, actualN, d)}</div></div>`;
+        }
+        if (actualN === 0 && !(w === actualW && n === 0)) {
+            convertHtml += `<div style="margin-bottom:8px;">轉換為整數：<strong style="color:var(--integer-green); margin-left:10px; font-size:1.1em;">${actualW}</strong></div>`;
+        }
+
+        let currentValHtml = '';
+        if (w > 0 && n > 0) {
+            currentValHtml = fMix(w, n, d);
+        } else if (n > 0) {
+            currentValHtml = fFrac(n, d);
+        } else {
+            currentValHtml = `<strong style="color:var(--integer-green); font-size:1.1em;">${w}</strong>`;
+        }
+
+        div.innerHTML = `
+            <div class="info-title">數值轉換與解析</div>
+            <div style="margin-top: 10px; margin-bottom: 15px; font-size: 1.05em;">
+                <div style="display:flex; align-items:center; min-height:30px; margin-bottom: 8px;">${currentValHtml}</div>
+                <div>類型：<strong>${type}</strong></div>
+            </div>
+            <div style="margin-bottom:15px;">${convertHtml}</div>
+        `;
+    }
+
+    updateUI();
+</script>
+
+</body>
+</html>
