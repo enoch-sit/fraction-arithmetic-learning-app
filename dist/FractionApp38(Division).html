@@ -964,6 +964,22 @@ let isCommonDenomReady = false;
 let blueMoldBusy = false; // true while a chunk is visiting #divisor-mold in handleDropChunk
 let divisionDropQueue = []; // chunks dropped while blueMoldBusy, processed one at a time
 let divisionAnimationStarted = false; // guard: each expand schedules checkCommonDenom; only start division once
+let bar2NumberLineHidden = false;
+let hideBar2NumberLineTimer = null;
+
+function clearHideBar2NumberLineTimer() {
+    if (hideBar2NumberLineTimer) {
+        clearTimeout(hideBar2NumberLineTimer);
+        hideBar2NumberLineTimer = null;
+    }
+}
+
+function hideBar2NumberLine() {
+    bar2NumberLineHidden = true;
+    hideBar2NumberLineTimer = null;
+    let nl2 = document.getElementById('bar2-nl');
+    if (nl2) { nl2.style.display = 'none'; nl2.innerHTML = ''; }
+}
 
 const wordProblemTemplates = [
     "有 [FRAC1] 公升果汁，每杯 [FRAC2] 公升，可以倒幾杯？",
@@ -1216,7 +1232,8 @@ function renderBar(num, action = 'none', old_s = 1) {
     }
 
     if(nlWrap) {
-        if (showNL) {
+        const showThisNL = showNL && (num === 1 || !bar2NumberLineHidden);
+        if (showThisNL) {
             nlWrap.style.display = 'flex';
             nlWrap.classList.add('continuous');
             nlWrap.innerHTML = '';
@@ -1286,6 +1303,9 @@ function checkCommonDenom() {
         document.getElementById('show-nl-cb').disabled = true;
 
         document.getElementById('drag-instruction').innerHTML = `💡 分母相同了，開始做除法`;
+
+        clearHideBar2NumberLineTimer();
+        hideBar2NumberLineTimer = setTimeout(hideBar2NumberLine, 1500 / currentSpeed);
         
         // 啟動除法動畫序列（通分成功後先暫停，讓學生閱讀）
         // 每次擴分都會延遲呼叫 checkCommonDenom；快速連點時只啟動一次，避免多層 drag-overlay 疊成「三條紅色長條」
@@ -1295,12 +1315,14 @@ function checkCommonDenom() {
         }
     } else {
         divisionAnimationStarted = false;
+        clearHideBar2NumberLineTimer();
+        bar2NumberLineHidden = false;
         // 尚未通分：恢復顯示工具
         document.querySelectorAll('.tool-btn').forEach(btn => btn.style.display = 'flex');
         document.getElementById('show-nl-cb').disabled = false;
         if(document.getElementById('show-nl-cb').checked) {
-            let nl1 = document.getElementById('bar1-nl'); if(nl1) nl1.style.display = 'flex';
-            let nl2 = document.getElementById('bar2-nl'); if(nl2) nl2.style.display = 'flex';
+            if (bar1Visible) renderBar(1, 'none');
+            if (bar2Visible) renderBar(2, 'none');
         }
         document.getElementById('drag-instruction').innerHTML = `💡 用「擴分／約分」讓兩邊分母相同`;
         document.getElementById('bar3-row').style.display = 'none';
@@ -1661,6 +1683,8 @@ function updateUI() {
     bar1Visible = false; bar2Visible = false;
     isCommonDenomReady = false;
     divisionAnimationStarted = false;
+    clearHideBar2NumberLineTimer();
+    bar2NumberLineHidden = false;
 
     document.getElementById('show-nl-cb').disabled = false;
 
